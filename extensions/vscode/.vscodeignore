@@ -1,10 +1,9 @@
 src/**
-node_modules/**
-dist/**
+.vscode/**
 .gitignore
 *.vsix
 biome.json
 tsconfig.json
 esbuild.config.mjs
-.vscode/**
 test/**
+node_modules/**
