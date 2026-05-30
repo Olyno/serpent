@@ -32,11 +32,12 @@ def format_document(source: str, line_length: int = 100) -> List[types.TextEdit]
         from mamushi.formatting.format import format_tree
     except ImportError:
         error_message = (
-            "mamushi n'est pas installé. Installez-le avec : "
-            "pip install mamushi"
+            "mamushi n'est pas installé. "
+            "Exécutez 'Serpent: Installer le formatter mamushi' "
+            "dans la palette de commandes."
         )
-        logger.error(error_message)
-        return _create_error_edit(error_message)
+        logger.warning(error_message)
+        return []  # Pas de modification, l'utilisateur verra la commande d'installation
 
     try:
         parser = Parser()

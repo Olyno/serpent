@@ -8,6 +8,7 @@
 import { type ExtensionContext, window, workspace } from 'vscode';
 import {
     COMMAND_COMPILE,
+    COMMAND_INSTALL_FORMATTER,
     COMMAND_RESTART_LSP,
     LANGUAGE_ID,
     LSP_SERVER_NAME,
@@ -45,6 +46,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
     context.subscriptions.push(
         registerCommand(COMMAND_COMPILE, executeCompileCommand),
         registerCommand(COMMAND_RESTART_LSP, () => restartLspServer(outputChannel)),
+        registerCommand(COMMAND_INSTALL_FORMATTER, installFormatter),
     );
 
     // Événement : compilation à la sauvegarde
@@ -150,4 +152,48 @@ async function restartLspServer(outputChannel: ReturnType<typeof createLogger>):
     } else {
         window.showErrorMessage('Échec du redémarrage du serveur LSP');
     }
+}
+
+/**
+ * Installe le formatter mamushi via uv ou pip.
+ * Propose une installation en un clic si mamushi n'est pas disponible.
+ */
+async function installFormatter(): Promise<void> {
+    const choice = await window.showInformationMessage(
+        'mamushi (formatter Vyper) n\\'est pas installé. L\\'installer maintenant ?',
+        { modal: false },
+        'Installer avec uv',
+        'Installer avec pip',
+    );
+
+    if (!choice) {
+        return;
+    }
+
+    const installCmd = choice === 'Installer avec uv'
+        ? { command: 'uv', args: ['pip', 'install', 'mamushi'] }
+        : { command: 'python3', args: ['-m', 'pip', 'install', 'mamushi'] };
+
+    logInfo(`Installation de mamushi via ${installCmd.command}...`);
+    window.showInformationMessage(`Installation de mamushi en cours via ${installCmd.command}...`);
+
+    execFile(
+        installCmd.command,
+        installCmd.args,
+        { timeout: 60000 },
+        (error, _stdout, stderr) => {
+            if (error) {
+                logError(`Échec d\\'installation de mamushi : ${stderr || error.message}`);
+                window.showErrorMessage(
+                    `Échec d\\'installation de mamushi. Installez-le manuellement : ` +
+                    `pip install mamushi`,
+                );
+            } else {
+                logInfo('mamushi installé avec succès');
+                window.showInformationMessage(
+                    'mamushi installé ! Le formatage Vyper est maintenant disponible (Shift+Alt+F).',
+                );
+            }
+        },
+    );
 }

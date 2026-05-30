@@ -20,6 +20,7 @@ export const LSP_SERVER_MODULE = 'serpent_lsp';
 /** Commandes enregistrées */
 export const COMMAND_COMPILE = `${EXTENSION_NAMESPACE}.compile`;
 export const COMMAND_RESTART_LSP = `${EXTENSION_NAMESPACE}.restartLsp`;
+export const COMMAND_INSTALL_FORMATTER = `${EXTENSION_NAMESPACE}.installFormatter`;
 
 /** Paramètres de configuration */
 export const CONFIG_LSP_ENABLED = 'lsp.enabled';

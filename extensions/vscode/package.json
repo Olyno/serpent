@@ -131,6 +131,11 @@
                 "command": "serpent.restartLsp",
                 "title": "Serpent: Redémarrer le serveur LSP",
                 "category": "Serpent"
+            },
+            {
+                "command": "serpent.installFormatter",
+                "title": "Serpent: Installer le formatter mamushi",
+                "category": "Serpent"
             }
         ]
     },
