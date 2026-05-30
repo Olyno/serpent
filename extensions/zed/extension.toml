@@ -4,10 +4,12 @@ version = "0.1.0"
 schema_version = 1
 authors = ["Serpent Team"]
 description = "Vyper language support for Zed"
-repository = "https://github.com/serpent-lang/serpent"
+repository = "https://github.com/Olyno/serpent"
 
 [grammars.vyper]
-repository = "https://github.com/serpent-lang/tree-sitter-vyper"
+repository = "https://github.com/Olyno/serpent"
+rev = "21a1542b91ed2d2f555583a07fd9915598273481"
+path = "grammars/tree-sitter-vyper"
 
 [language_servers.vyper]
 name = "Serpent LSP"
