@@ -1,7 +1,7 @@
 {
     "name": "serpent-vscode",
     "displayName": "Serpent - Vyper Language Support",
-    "description": "Support du langage Vyper pour Visual Studio Code — LSP, snippets, coloration syntaxique, compilation",
+    "description": "Vyper language support for Visual Studio Code — LSP, snippets, syntax highlighting, compilation",
     "version": "0.1.0",
     "license": "MIT",
     "publisher": "serpent",
@@ -98,17 +98,17 @@
                 "serpent.lsp.enabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Activer/désactiver le Language Server Protocol (complétion, diagnostics, navigation)."
+                    "description": "Enable/disable the Language Server Protocol (completion, diagnostics, navigation)."
                 },
                 "serpent.compile.onSave": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Compiler automatiquement le contrat à la sauvegarde."
+                    "description": "Automatically compile the contract on save."
                 },
                 "serpent.compile.command": {
                     "type": "string",
                     "default": "vyper",
-                    "description": "Commande shell pour invoquer le compilateur Vyper (ex: 'vyper', 'python -m vyper')."
+                    "description": "Shell command to invoke the Vyper compiler (e.g. 'vyper', 'python -m vyper')."
                 },
                 "serpent.python.interpreter": {
                     "type": "array",
@@ -116,7 +116,7 @@
                         "type": "string"
                     },
                     "default": [],
-                    "description": "Chemin vers l'interpréteur Python à utiliser. Laissez vide pour la détection automatique.",
+                    "description": "Path to the Python interpreter to use. Leave empty for auto-detection.",
                     "scope": "machine"
                 }
             }
@@ -124,17 +124,17 @@
         "commands": [
             {
                 "command": "serpent.compile",
-                "title": "Serpent: Compiler le contrat Vyper",
+                "title": "Serpent: Compile Vyper Contract",
                 "category": "Serpent"
             },
             {
                 "command": "serpent.restartLsp",
-                "title": "Serpent: Redémarrer le serveur LSP",
+                "title": "Serpent: Restart LSP Server",
                 "category": "Serpent"
             },
             {
                 "command": "serpent.installFormatter",
-                "title": "Serpent: Installer le formatter mamushi",
+                "title": "Serpent: Install mamushi Formatter",
                 "category": "Serpent"
             }
         ]
@@ -152,6 +152,7 @@
         "vscode-languageclient": "^9.0.1"
     },
     "devDependencies": {
+        "@biomejs/biome": "^2.4.16",
         "@types/node": "^25.9.1",
         "@types/vscode": "1.87.0",
         "@vscode/test-electron": "^2.4.1",
