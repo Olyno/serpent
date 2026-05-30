@@ -28,6 +28,9 @@
         },
         {
             "include": "#vyper-keywords-units"
+        },
+        {
+            "include": "#vyper-builtin-functions"
         }
     ],
     "repository": {
@@ -1833,13 +1836,13 @@
             }
         },
         "special-variables": {
-            "match": "(?x)\n  \\b (?<!\\.) (?:\n    (self) | (cls)\n  )\\b\n",
+            "match": "(?x)\\n  \\\\b (?<!\\\\.) (?:\\n    (self) | (cls)\\n  )\\\\b\\n",
             "captures": {
                 "1": {
-                    "name": "variable.language.special.self.python"
+                    "name": "variable.language.self.vyper"
                 },
                 "2": {
-                    "name": "variable.language.special.cls.python"
+                    "name": "variable.language.cls.vyper"
                 }
             }
         },
@@ -4319,10 +4322,10 @@
         },
         "reserved-names-vyper": {
             "name": "keyword.control.vyper",
-            "match": "(?x)\\n  \\\\b (def | if | elif | else | for | return | raise | assert | pass | break | continue | import | from | as | in | and | or | not | range) \\\\b\\n"
+            "match": "(?x)\\n  \\\\b (def | if | elif | else | for | return | raise | assert | pass | break | continue | import | from | as | in | and | or | not | range | log) \\\\b\\n"
         },
         "vyper-keywords-type": {
-            "name": "keyword.type.vyper",
+            "name": "storage.type.vyper",
             "match": "(?x)\\n  \\\\b (struct | enum | flag | event | interface) \\\\b\\n"
         },
         "vyper-keywords-modifier": {
@@ -4336,6 +4339,10 @@
         "vyper-keywords-units": {
             "name": "constant.numeric.vyper",
             "match": "(?x)\\n  \\\\b (wei | kwei | babbage | shannon | finney | szabo | gwei | ada | lovelace | mwei | twei | pwei | ether) \\\\b\\n"
+        },
+        "vyper-builtin-functions": {
+            "name": "support.function.vyper",
+            "match": "(?x)\\n  \\\\b (empty | convert | slice | concat | len | keccak256 | sha256 | ecrecover | ecadd | ecmul | extract32 | uint2str | as_wei_value | as_unitless_number | create_minimal_proxy_to | create_copy_of | create_from_blueprint | raw_call | raw_log | raw_revert | raw_create | selfdestruct | send | shift | abs | ceil | epsilon | floor | max | max_value | min | min_value | pow_mod256 | sqrt | isqrt | uint256_addmod | uint256_mulmod | unsafe_add | unsafe_sub | unsafe_mul | unsafe_div | print) \\\\b\\n"
         }
     }
 }
