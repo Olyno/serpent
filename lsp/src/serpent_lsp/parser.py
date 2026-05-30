@@ -1,8 +1,8 @@
 """
-Parsing de modules Vyper.
+Parsing of Vyper modules.
 
-Parse un fichier source Vyper, extrait l'AST et construit
-la table des symboles avec les informations de namespace.
+Parses a Vyper source file, extracts the AST, and builds
+the symbol table with namespace information.
 """
 
 import logging
@@ -16,7 +16,7 @@ from serpent_lsp.features.symbol_table import SymbolTable
 
 logger = logging.getLogger("serpent_lsp")
 
-# Pattern pour extraire la version Vyper du pragma ou @version
+# Pattern to extract Vyper version from pragma or @version
 _VERSION_PATTERN = re.compile(
     r"#\s*(?:@version|pragma\s+version)\s*(?:[<>=!~^]*)\s*(\d+\.\d+\.\d+)"
 )
@@ -29,21 +29,21 @@ def parse_module(
     source: Optional[str] = None,
 ) -> "Module":
     """
-    Parse un fichier source Vyper en Module avec informations de namespace.
+    Parses a Vyper source file into a Module with namespace information.
 
     Args:
-        path: Chemin vers le fichier source Vyper.
-        default_version: Version Vyper de fallback si absente du fichier.
-        workspace_path: Chemin racine pour la résolution des imports.
-        source: Contenu source optionnel (buffers non sauvegardés).
+        path: Path to the Vyper source file.
+        default_version: Fallback Vyper version if absent from the file.
+        workspace_path: Root path for import resolution.
+        source: Optional source content (unsaved buffers).
 
     Returns:
-        Un objet Module avec AST parsé et namespace.
+        A Module object with parsed AST and namespace.
 
     Raises:
-        ValueError: Si aucune version trouvée et aucun défaut fourni.
+        ValueError: If no version found and no default provided.
     """
-    # Utiliser la source fournie ou lire depuis le disque
+    # Use provided source or read from disk
     content = source if source is not None else Path(path).read_text()
     match = _VERSION_PATTERN.search(content)
     if match:
@@ -52,7 +52,7 @@ def parse_module(
         version = default_version
     else:
         raise ValueError(
-            f"Version introuvable dans {path} et aucune version par défaut fournie"
+            f"Version not found in {path} and no default version provided"
         )
 
     vyper_module = get_json_ast(
@@ -60,7 +60,7 @@ def parse_module(
     )
     module = Module(vyper_module, version)
 
-    # Construire la table des symboles via le visiteur
+    # Build the symbol table via the visitor
     from serpent_lsp.ast.visitor import VyperAstVisitor
 
     visitor = VyperAstVisitor(module)
@@ -70,20 +70,20 @@ def parse_module(
 
 class Module:
     """
-    Représente un module Vyper parsé avec son AST et namespace.
+    Represents a parsed Vyper module with its AST and namespace.
 
-    Attributs:
-        version: La version Vyper utilisée pour parser ce module.
-        ast: Le nœud AST racine (Module).
-        symbol_table: La table des symboles unifiée.
-        namespace: Namespace hiérarchique (legacy, backé par symbol_table).
-        flags: Ensemble de FlagDef.
-        functions: Ensemble de FunctionDef.
-        events: Ensemble de EventDef.
-        interfaces: Ensemble de InterfaceDef.
-        structs: Ensemble de StructDef.
-        variables: Ensemble de VariableDecl.
-        imports: Mapping alias → chemin résolu.
+    Attributes:
+        version: The Vyper version used to parse this module.
+        ast: The root AST node (Module).
+        symbol_table: The unified symbol table.
+        namespace: Hierarchical namespace (legacy, backed by symbol_table).
+        flags: Set of FlagDef.
+        functions: Set of FunctionDef.
+        events: Set of EventDef.
+        interfaces: Set of InterfaceDef.
+        structs: Set of StructDef.
+        variables: Set of VariableDecl.
+        imports: Mapping alias → resolved path.
     """
 
     def __init__(self, ast: nodes.Module, vyper_version: str) -> None:
@@ -101,13 +101,13 @@ class Module:
 
     @property
     def namespace(self) -> Dict[str, Any]:
-        """Namespace legacy, backé par symbol_table."""
+        """Legacy namespace, backed by symbol_table."""
         return self.symbol_table.namespace
 
     def external_namespace(self) -> Dict[str, Any]:
         """
-        Retourne le namespace visible par les modules externes qui importent celui-ci.
+        Returns the namespace visible to external modules that import this one.
 
-        Namespace aplati incluant les noms module et les noms self (sans le préfixe).
+        Flattened namespace including module names and self names (without the prefix).
         """
         return self.symbol_table.external_namespace()

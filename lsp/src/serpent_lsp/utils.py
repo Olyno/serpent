@@ -1,7 +1,7 @@
 """
-Utilitaires pour le Language Server Vyper.
+Utilities for the Vyper Language Server.
 
-Fonctions helper pour les plages LSP, l'extraction de mots, etc.
+Helper functions for LSP ranges, word extraction, etc.
 """
 
 import logging
@@ -20,10 +20,10 @@ logger = logging.getLogger("serpent_lsp")
 
 def get_installed_vyper_version() -> Optional[Version]:
     """
-    Récupère la version de Vyper installée dans l'environnement courant.
+    Gets the version of Vyper installed in the current environment.
 
     Returns:
-        La version de Vyper, ou None si non installée.
+        The Vyper version, or None if not installed.
     """
     try:
         return Version(pkg_version("vyper"))
@@ -33,15 +33,15 @@ def get_installed_vyper_version() -> Optional[Version]:
 
 def range_from_node(node: BaseNode) -> Range:
     """
-    Crée une plage LSP (Range) à partir des informations de position d'un nœud AST.
+    Creates an LSP Range from an AST node's position information.
 
-    Convertit les numéros de ligne 1-based de l'AST en 0-based pour LSP.
+    Converts 1-based AST line numbers to 0-based for LSP.
 
     Args:
-        node: Le nœud AST avec les attributs lineno, col_offset, etc.
+        node: The AST node with lineno, col_offset, etc. attributes.
 
     Returns:
-        Un objet Range LSP.
+        An LSP Range object.
     """
     return Range(
         start=Position(line=node.lineno - 1, character=node.col_offset),
@@ -52,7 +52,7 @@ def range_from_node(node: BaseNode) -> Range:
 
 
 def range_from_start() -> Range:
-    """Crée une plage LSP pointant au début d'un document."""
+    """Creates an LSP range pointing to the start of a document."""
     return Range(
         start=Position(line=0, character=0),
         end=Position(line=0, character=0),
@@ -60,7 +60,7 @@ def range_from_start() -> Range:
 
 
 def location_from_start(uri: str) -> Location:
-    """Crée une location LSP pointant au début d'un document."""
+    """Creates an LSP location pointing to the start of a document."""
     return Location(uri=uri, range=range_from_start())
 
 
@@ -68,16 +68,16 @@ def get_attribute_word(
     doc: TextDocument, position: Position
 ) -> Optional[str]:
     """
-    Extrait le mot d'attribut à la position donnée dans un document.
+    Extracts the attribute word at the given position in a document.
 
-    Capture les identifiants avec points comme 'self.foo' ou 'module.Type'.
+    Captures dotted identifiers like 'self.foo' or 'module.Type'.
 
     Args:
-        doc: Le document texte.
-        position: La position du curseur.
+        doc: The text document.
+        position: The cursor position.
 
     Returns:
-        Le mot à la position (incluant les points), ou None.
+        The word at the position (including dots), or None.
     """
     try:
         word = doc.word_at_position(

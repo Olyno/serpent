@@ -1,8 +1,8 @@
 """
-Visiteur AST Vyper pour la construction de la table des symboles.
+Vyper AST visitor for symbol table construction.
 
-Parcourt l'AST Vyper et construit la SymbolTable avec toutes
-les définitions et leurs patterns d'accès.
+Walks the Vyper AST and builds the SymbolTable with all
+definitions and their access patterns.
 """
 
 import logging
@@ -24,12 +24,12 @@ logger = logging.getLogger("serpent_lsp")
 
 class VyperAstVisitor:
     """
-    Visiteur qui extrait les informations d'espace de noms d'un AST Vyper.
+    Visitor that extracts namespace information from a Vyper AST.
 
-    Parcourt l'AST et peuple un Module avec :
-    - La table des symboles (symboles module et locaux)
-    - Les ensembles catégorisés (fonctions, variables, etc.)
-    - Les mappings d'imports
+    Walks the AST and populates a Module with:
+    - The symbol table (module and local symbols)
+    - Categorized sets (functions, variables, etc.)
+    - Import mappings
     """
 
     def __init__(self, module: "Module") -> None:
@@ -37,11 +37,11 @@ class VyperAstVisitor:
         self._current_function: Optional[nodes.FunctionDef] = None
 
     def visit(self, node: nodes.BaseNode) -> None:
-        """Visite un nœud en dispatchant vers la méthode appropriée."""
+        """Visits a node by dispatching to the appropriate method."""
         node_type = type(node).__name__
         visitor_fn = getattr(self, f"visit_{node_type}", None)
         if visitor_fn is None:
-            logger.debug("Pas de visiteur pour le type : %s", node_type)
+            logger.debug("No visitor for type: %s", node_type)
             return
         visitor_fn(node)
 
@@ -54,7 +54,7 @@ class VyperAstVisitor:
         parent_function: Optional[nodes.FunctionDef] = None,
         children: Optional[list] = None,
     ) -> SymbolEntry:
-        """Helper pour ajouter un symbole à la table."""
+        """Helper to add a symbol to the table."""
         entry = SymbolEntry(
             name=name,
             node=node,
@@ -67,7 +67,7 @@ class VyperAstVisitor:
         self.module.symbol_table.add(entry)
         return entry
 
-    # ---- Nœuds de haut niveau ----
+    # ---- Top-level nodes ----
 
     def visit_Module(self, node: nodes.Module) -> None:
         for child in node.body:
@@ -88,10 +88,10 @@ class VyperAstVisitor:
         if not node.name:
             return
 
-        # Collecter les enfants (paramètres et variables locales)
+        # Collect children (parameters and local variables)
         children: list[SymbolEntry] = []
 
-        # Visiter les arguments
+        # Visit arguments
         if node.args:
             for arg_node in node.args.args:
                 arg_entry = SymbolEntry(
@@ -105,28 +105,28 @@ class VyperAstVisitor:
                 self.module.symbol_table.add(arg_entry)
                 children.append(arg_entry)
 
-        # Contexte de fonction courant pour la visite du corps
+        # Current function context for body traversal
         self._current_function = node
 
-        # Visiter le corps pour les variables locales
+        # Visit body for local variables
         for child in node.body:
             local_entries = self._visit_function_body_node(child, node)
             children.extend(local_entries)
 
         self._current_function = None
 
-        # Ajouter la fonction elle-même
+        # Add the function itself
         self._add_symbol(node.name, node, SymbolKind.Function, children=children)
 
     def _visit_function_body_node(
         self, node: nodes.BaseNode, func: nodes.FunctionDef
     ) -> list[SymbolEntry]:
         """
-        Visite un nœud dans le corps d'une fonction pour collecter
-        les définitions de variables locales.
+        Visits a node within a function body to collect
+        local variable definitions.
 
         Returns:
-            Liste des SymbolEntry pour les variables locales trouvées.
+            List of SymbolEntry for found local variables.
         """
         entries: list[SymbolEntry] = []
 
@@ -134,7 +134,7 @@ class VyperAstVisitor:
             return entries
 
         if isinstance(node, nodes.AnnAssign):
-            # Déclaration de variable locale : x: uint256 = ...
+            # Local variable declaration: x: uint256 = ...
             if hasattr(node, "target") and hasattr(node.target, "id"):
                 entry = SymbolEntry(
                     name=node.target.id,
@@ -148,7 +148,7 @@ class VyperAstVisitor:
                 entries.append(entry)
 
         elif isinstance(node, nodes.For):
-            # Variable de boucle : for i: uint256 in range(10)
+            # Loop variable: for i: uint256 in range(10)
             if isinstance(node.target, nodes.AnnAssign):
                 if hasattr(node.target, "target") and hasattr(
                     node.target.target, "id"
@@ -176,12 +176,12 @@ class VyperAstVisitor:
                 self.module.symbol_table.add(entry)
                 entries.append(entry)
 
-            # Visiter récursivement le corps de la boucle
+            # Recursively visit the loop body
             for child in node.body:
                 entries.extend(self._visit_function_body_node(child, func))
 
         elif isinstance(node, nodes.If):
-            # Visiter récursivement les branches if/else
+            # Recursively visit if/else branches
             for child in node.body:
                 entries.extend(self._visit_function_body_node(child, func))
             for child in node.orelse:
@@ -244,7 +244,7 @@ class VyperAstVisitor:
     def _visit_struct_like_body(
         self, node: nodes.EventDef | nodes.StructDef
     ) -> list[SymbolEntry]:
-        """Visite le corps d'un nœud struct-like pour collecter les champs."""
+        """Visits the body of a struct-like node to collect fields."""
         children: list[SymbolEntry] = []
         for child in node.body:
             if isinstance(child, nodes.AnnAssign) and hasattr(child, "target"):
@@ -279,7 +279,7 @@ class VyperAstVisitor:
     def visit_ImportFrom(self, node: nodes.ImportFrom) -> None:
         self._handle_import(node)
 
-    # ---- Déclarations spéciales (no-op) ----
+    # ---- Special declarations (no-op) ----
 
     def visit_ImplementsDecl(self, node: nodes.ImplementsDecl) -> None:
         pass
@@ -293,7 +293,7 @@ class VyperAstVisitor:
     def visit_ExportsDecl(self, node: nodes.ExportsDecl) -> None:
         pass
 
-    # Compatibilité avec les anciennes versions Vyper (AnnAssign module)
+    # Compatibility with older Vyper versions (AnnAssign at module level)
     def visit_AnnAssign(self, node: nodes.AnnAssign) -> None:
         if isinstance(node.parent, nodes.Module):
             if node.annotation is not None and isinstance(

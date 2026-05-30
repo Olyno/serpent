@@ -1,8 +1,8 @@
 """
-Wrapper de gestion des versions Vyper via uv.
+Vyper version management wrapper via uv.
 
-Crée et gère des environnements virtuels isolés pour chaque version
-de Vyper dans ~/.serpent/venvs/.
+Creates and manages isolated virtual environments for each
+Vyper version in ~/.serpent/venvs/.
 """
 
 import os
@@ -11,24 +11,24 @@ from pathlib import Path
 
 from packaging.version import Version
 
-# Répertoire de base pour les venvs gérés par serpent
+# Base directory for serpent-managed venvs
 SERPENT_VENVS_DIR = Path.home() / ".serpent" / "venvs"
 
 
 def _get_venv_path(version: str) -> Path:
-    """Retourne le chemin du venv pour une version donnée."""
+    """Returns the venv path for a given version."""
     return SERPENT_VENVS_DIR / version
 
 
 def _get_py_version_for_vy_version(vy_version: str) -> str:
     """
-    Détermine la version Python appropriée pour une version Vyper donnée.
+    Determines the appropriate Python version for a given Vyper version.
 
     Args:
-        vy_version: Version de Vyper (ex: "0.4.1").
+        vy_version: Vyper version (e.g. "0.4.1").
 
     Returns:
-        Version Python requise (ex: "3.10").
+        Required Python version (e.g. "3.10").
     """
     vy_ver = Version(vy_version)
 
@@ -40,32 +40,32 @@ def _get_py_version_for_vy_version(vy_version: str) -> str:
 
 
 def _get_venv_python(venv_path: Path) -> str:
-    """Retourne le chemin vers l'exécutable Python dans un venv."""
+    """Returns the path to the Python executable in a venv."""
     return str(venv_path / "bin" / "python")
 
 
 def ensure_vyper_version(version: str) -> Path:
     """
-    S'assure que la version spécifiée de Vyper est disponible dans un
-    environnement virtuel géré par uv.
+    Ensures the specified Vyper version is available in a
+    uv-managed virtual environment.
 
-    Si l'environnement n'existe pas, il est créé avec la bonne version
-    Python et Vyper y est installé.
+    If the environment does not exist, it is created with the correct
+    Python version and Vyper is installed.
 
     Args:
-        version: Version de Vyper souhaitée (ex: "0.4.1").
+        version: Desired Vyper version (e.g. "0.4.1").
 
     Returns:
-        Chemin vers le répertoire du venv.
+        Path to the venv directory.
     """
     venv_path = _get_venv_path(version)
 
     if not venv_path.exists():
-        print(f"[serpent-lsp] Création de l'environnement uv pour vyper {version}...")
+        print(f"[serpent-lsp] Creating uv environment for vyper {version}...")
 
         py_version = _get_py_version_for_vy_version(version)
 
-        # Créer le venv avec uv
+        # Create the venv with uv
         subprocess.run(
             ["uv", "venv", "--python", py_version, str(venv_path)],
             check=True,
@@ -75,7 +75,7 @@ def ensure_vyper_version(version: str) -> Path:
         env = os.environ.copy()
         env["VIRTUAL_ENV"] = str(venv_path)
 
-        # Mettre à jour setuptools
+        # Update setuptools
         subprocess.run(
             [
                 "uv",
@@ -90,7 +90,7 @@ def ensure_vyper_version(version: str) -> Path:
             check=True,
         )
 
-        # Installer vyper
+        # Install vyper
         subprocess.run(
             [
                 "uv",
@@ -104,6 +104,6 @@ def ensure_vyper_version(version: str) -> Path:
             check=True,
         )
 
-        print(f"[serpent-lsp] Environnement vyper {version} créé dans {venv_path}")
+        print(f"[serpent-lsp] Vyper {version} environment created at {venv_path}")
 
     return venv_path

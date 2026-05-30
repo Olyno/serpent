@@ -1,8 +1,8 @@
 """
-Parseur AST JSON → dataclasses pour Vyper.
+AST JSON → dataclass parser for Vyper.
 
-Convertit l'AST JSON produit par le compilateur Vyper en
-dataclasses Python typées pour le serveur LSP.
+Converts the JSON AST produced by the Vyper compiler into
+typed Python dataclasses for the LSP server.
 """
 
 import json
@@ -19,7 +19,7 @@ from serpent_lsp.ast.nodes import AST_CLASS_MAP, BaseNode, Module
 
 logger = logging.getLogger("serpent_lsp")
 
-# Alias de types AST (différences de nommage)
+# AST type aliases (naming differences)
 _AST_TYPE_ALIASES: Dict[str, str] = {
     "List": "ListNode",
     "Tuple": "TupleNode",
@@ -35,19 +35,19 @@ def get_script(
     source: Optional[str] = None,
 ) -> str:
     """
-    Génère un script Python qui extrait l'AST Vyper au format JSON.
+    Generates a Python script that extracts the Vyper AST in JSON format.
 
     Args:
-        file_path: Chemin vers le fichier source Vyper.
-        vyper_version: Version de Vyper à utiliser.
-        search_paths: Chemins de recherche pour les imports.
-        source: Contenu source optionnel (pour les buffers non sauvegardés).
+        file_path: Path to the Vyper source file.
+        vyper_version: Vyper version to use.
+        search_paths: Search paths for imports.
+        source: Optional source content (for unsaved buffers).
 
     Returns:
-        Le script Python sous forme de chaîne.
+        The Python script as a string.
     """
     if Version(vyper_version) < Version("0.4.1"):
-        # Anciennes versions : on peut passer la source directement à CompilerData
+        # Older versions: we can pass the source directly to CompilerData
         if source is None:
             source = Path(file_path).read_text()
         return dedent(
@@ -60,7 +60,7 @@ def get_script(
             """
         )
 
-    # Version >= 0.4.1 : FilesystemInputBundle (lit depuis le disque)
+    # Version >= 0.4.1 : FilesystemInputBundle (reads from disk)
     return dedent(
         f"""
         import json
@@ -90,25 +90,25 @@ def get_json_ast(
     source: Optional[str] = None,
 ) -> Module:
     """
-    Obtient l'AST Vyper sous forme de dataclasses Python.
+    Gets the Vyper AST as Python dataclasses.
 
     Args:
-        path: Chemin vers le fichier source Vyper.
-        vyper_version: Version de Vyper à utiliser.
-        workspace_path: Chemin racine du workspace (pour imports relatifs).
-        source: Contenu source optionnel (buffers non sauvegardés).
+        path: Path to the Vyper source file.
+        vyper_version: Vyper version to use.
+        workspace_path: Workspace root path (for relative imports).
+        source: Optional source content (unsaved buffers).
 
     Returns:
-        Le nœud Module racine de l'AST.
+        The root Module node of the AST.
 
     Raises:
-        RuntimeError: Si le compilateur Vyper échoue.
+        RuntimeError: If the Vyper compiler fails.
     """
     env = resolve_environment(vyper_version)
     search_paths = env.get_search_paths(include_sys_path=True)
 
-    # Pour les buffers non sauvegardés avec Vyper >= 0.4.1,
-    # on écrit dans un fichier temporaire pour FilesystemInputBundle
+    # For unsaved buffers with Vyper >= 0.4.1,
+    # write to a temporary file for FilesystemInputBundle
     temp_file = None
     effective_path = path
     if source is not None and Version(vyper_version) >= Version("0.4.1"):
@@ -131,32 +131,32 @@ def get_json_ast(
                 pass
 
     if result.returncode != 0:
-        error_message = result.stderr.strip() or "Erreur inconnue"
+        error_message = result.stderr.strip() or "Unknown error"
         if temp_file is not None:
             temp_name = Path(temp_file.name).name
             error_message = error_message.replace(temp_name, Path(path).name)
         logger.error(
-            "Échec de l'extraction AST pour Vyper %s : %s",
+            "AST extraction failed for Vyper %s : %s",
             vyper_version,
             error_message,
         )
         raise RuntimeError(error_message)
 
-    logger.info("AST Vyper obtenu (version %s)", vyper_version)
+    logger.info("Vyper AST obtained (version %s)", vyper_version)
 
     try:
         parsed_json = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
         logger.error(
-            "Échec du parsing JSON AST pour Vyper %s : %s", vyper_version, exc
+            "AST JSON parsing failed for Vyper %s : %s", vyper_version, exc
         )
         raise
 
     lsp_ast = _from_vyper_json_ast(parsed_json)
     if not isinstance(lsp_ast, Module):
-        raise TypeError("La racine de l'AST devrait être un nœud Module")
+        raise TypeError("AST root should be a Module node")
 
-    logger.info("AST Vyper converti en dataclasses LSP")
+    logger.info("Vyper AST converted to LSP dataclasses")
     return lsp_ast
 
 
@@ -164,18 +164,18 @@ def _from_vyper_json_ast(
     ast_dict: Dict[str, Any], parent: Optional[BaseNode] = None
 ) -> BaseNode:
     """
-    Convertit récursivement un dict AST JSON Vyper en dataclasse Python.
+    Recursively converts a Vyper JSON AST dict into a Python dataclass.
 
     Args:
-        ast_dict: Le dictionnaire représentant un nœud AST.
-        parent: Le nœud parent (pour les références parent).
+        ast_dict: The dictionary representing an AST node.
+        parent: The parent node (for parent references).
 
     Returns:
-        Le nœud AST converti.
+        The converted AST node.
     """
 
     def _convert_child(value: Any) -> Any:
-        """Convertit récursivement les enfants d'un nœud."""
+        """Recursively converts the children of a node."""
         if isinstance(value, list):
             return [_convert_child(item) for item in value]
         if isinstance(value, dict) and "ast_type" in value:
@@ -194,7 +194,7 @@ def _from_vyper_json_ast(
     for key, value in ast_dict.items():
         if key not in cls_fields:
             logger.debug(
-                "Clé '%s' absente des champs de la dataclasse %s",
+                "Key '%s' missing from dataclass %s fields",
                 key,
                 cls.__name__,
             )
@@ -204,7 +204,7 @@ def _from_vyper_json_ast(
     node = cls(**kwargs)  # type: ignore[call-arg]
     node.parent = parent
 
-    # Mettre à jour les références parent des enfants
+    # Update child parent references
     for key, value in kwargs.items():
         if isinstance(value, BaseNode):
             value.parent = node

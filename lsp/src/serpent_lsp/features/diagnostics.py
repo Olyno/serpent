@@ -1,8 +1,8 @@
 """
-Diagnostics de compilation complète pour le Vyper Language Server.
+Full compilation diagnostics for the Vyper Language Server.
 
-Exécute l'analyse sémantique Vyper et extrait les diagnostics
-(erreurs, avertissements) pour l'éditeur.
+Runs Vyper semantic analysis and extracts diagnostics
+(errors, warnings) for the editor.
 """
 
 import json
@@ -20,10 +20,10 @@ from serpent_lsp.ast.environment import resolve_environment
 
 logger = logging.getLogger("serpent_lsp")
 
-# Pattern pour extraire ligne:colonne des messages d'erreur Vyper
+# Pattern to extract line:column from Vyper error messages
 _ERROR_LOCATION_PATTERN = re.compile(r"line\s+(\d+):(\d+)")
 
-# Pattern pour extraire le type d'erreur Vyper
+# Pattern to extract Vyper error type
 _ERROR_TYPE_PATTERN = re.compile(r"vyper\.exceptions\.(\w+)")
 
 
@@ -34,16 +34,16 @@ def _get_compile_script(
     source: Optional[str] = None,
 ) -> str:
     """
-    Génère un script Python qui exécute la compilation complète Vyper.
+    Generates a Python script that runs full Vyper compilation.
 
     Args:
-        file_path: Chemin du fichier source.
-        vyper_version: Version de Vyper.
-        search_paths: Chemins de recherche.
-        source: Source optionnelle (buffers non sauvegardés).
+        file_path: Source file path.
+        vyper_version: Vyper version.
+        search_paths: Search paths.
+        source: Optional source (unsaved buffers).
 
     Returns:
-        Script Python sous forme de chaîne.
+        Python script as a string.
     """
     if Version(vyper_version) < Version("0.4.0"):
         if source is None:
@@ -76,7 +76,7 @@ def _get_compile_script(
             """
         )
 
-    # Version >= 0.4.0 : s'arrête à l'AST annoté (analyse sémantique)
+    # Version >= 0.4.0 : stops at annotated AST (semantic analysis)
     return dedent(
         f"""
         import json
@@ -115,12 +115,12 @@ def _get_compile_script(
 
 def parse_error_location(message: str) -> Tuple[int, int]:
     """
-    Extrait la ligne et la colonne d'un message d'erreur Vyper.
+    Extracts the line and column from a Vyper error message.
 
-    Format Vyper : "line 6:17" où 6 = ligne (1-based), 17 = colonne (0-based).
+    Vyper format: "line 6:17" where 6 = line (1-based), 17 = column (0-based).
 
     Returns:
-        (ligne, colonne) en indices 0-based pour LSP. Défaut (0, 0).
+        (line, column) as 0-based indices for LSP. Default (0, 0).
     """
     match = _ERROR_LOCATION_PATTERN.search(message)
     if match:
@@ -131,7 +131,7 @@ def parse_error_location(message: str) -> Tuple[int, int]:
 
 
 def _parse_error_type(traceback_str: str) -> Optional[str]:
-    """Extrait le type d'exception Vyper d'une traceback."""
+    """Extracts the Vyper exception type from a traceback."""
     match = _ERROR_TYPE_PATTERN.search(traceback_str)
     if match:
         return match.group(1)
@@ -139,7 +139,7 @@ def _parse_error_type(traceback_str: str) -> Optional[str]:
 
 
 def _get_severity(error_type: Optional[str]) -> types.DiagnosticSeverity:
-    """Mappe les types d'erreur Vyper vers les sévérités LSP."""
+    """Maps Vyper error types to LSP severities."""
     warning_types = {"DeprecationWarning", "SyntaxWarning"}
     if error_type in warning_types:
         return types.DiagnosticSeverity.Warning

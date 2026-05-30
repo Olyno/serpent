@@ -1,9 +1,9 @@
 """
-Gestion des environnements Vyper via uv.
+Vyper environment management via uv.
 
-Gère la création et la résolution d'environnements virtuels pour
-différentes versions du compilateur Vyper. Les venvs sont stockés
-dans ~/.serpent/venvs/.
+Manages the creation and resolution of virtual environments for
+different versions of the Vyper compiler. Venvs are stored
+in ~/.serpent/venvs/.
 """
 
 import json
@@ -24,29 +24,29 @@ logger = logging.getLogger("serpent_lsp")
 
 class VyperEnvironment(ABC):
     """
-    Classe de base abstraite pour les environnements d'exécution Vyper.
+    Abstract base class for Vyper execution environments.
 
-    Les sous-classes doivent implémenter :
-    - python_bin : Chemin vers l'interpréteur Python
-    - vyper_version : Version de Vyper dans cet environnement
+    Subclasses must implement:
+    - python_bin : Path to the Python interpreter
+    - vyper_version : Vyper version in this environment
     """
 
     @property
     @abstractmethod
     def python_bin(self) -> str:
-        """Retourne le chemin vers l'interpréteur Python."""
+        """Returns the path to the Python interpreter."""
         ...
 
     @property
     @abstractmethod
     def vyper_version(self) -> str:
-        """Retourne la version de Vyper sous forme de chaîne."""
+        """Returns the Vyper version as a string."""
         ...
 
     def get_sys_path(self) -> list[str]:
         """
-        Obtient les chemins système (sys.path) de l'interpréteur Python
-        dans cet environnement. Utilisé pour la résolution des imports.
+        Gets the system paths (sys.path) of the Python interpreter
+        in this environment. Used for import resolution.
         """
         command = [
             self.python_bin,
@@ -56,7 +56,7 @@ class VyperEnvironment(ABC):
         result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode != 0:
             logger.warning(
-                "Impossible de lire sys.path depuis %s : %s",
+                "Could not read sys.path from %s : %s",
                 self.python_bin,
                 result.stderr.strip(),
             )
@@ -65,41 +65,41 @@ class VyperEnvironment(ABC):
             paths = json.loads(result.stdout)
         except json.JSONDecodeError:
             logger.warning(
-                "Impossible de décoder sys.path depuis %s", self.python_bin
+                "Could not decode sys.path from %s", self.python_bin
             )
             return []
         return paths
 
     def get_search_paths(self, include_sys_path: bool = True) -> list[str]:
         """
-        Construit la liste des chemins de recherche pour Vyper.
+        Builds the list of search paths for Vyper.
 
         Args:
-            include_sys_path: Si True, inclut sys.path + ".".
+            include_sys_path: If True, includes sys.path + ".".
 
         Returns:
-            Liste des chemins de recherche.
+            List of search paths.
         """
         search_paths: list[str] = []
         if include_sys_path:
             search_paths.extend(self.get_sys_path())
             if "." not in search_paths:
                 search_paths.append(".")
-        logger.debug("Chemins de recherche : %s", search_paths)
+        logger.debug("Search paths: %s", search_paths)
         return search_paths
 
     def run_script(
         self, script: str, cwd: Optional[str] = None
     ) -> subprocess.CompletedProcess:
         """
-        Exécute un script Python dans cet environnement.
+        Runs a Python script in this environment.
 
         Args:
-            script: Le script Python à exécuter.
-            cwd: Répertoire de travail pour le sous-processus.
+            script: The Python script to run.
+            cwd: Working directory for the subprocess.
 
         Returns:
-            Le résultat du processus terminé.
+            The completed process result.
         """
         return subprocess.run(
             [self.python_bin, "-c", script],
@@ -111,14 +111,14 @@ class VyperEnvironment(ABC):
 
 class SystemEnvironment(VyperEnvironment):
     """
-    Environnement utilisant le Vyper installé dans l'environnement Python courant.
+    Environment using Vyper installed in the current Python environment.
 
-    À utiliser quand l'utilisateur a Vyper installé et que la version correspond.
+    Use when the user has Vyper installed and the version matches.
     """
 
     def __init__(self, vyper_version: str) -> None:
         self._vyper_version = vyper_version
-        logger.info("Utilisation de vyper %s depuis l'environnement système", vyper_version)
+        logger.info("Using vyper %s from system environment", vyper_version)
 
     @property
     def python_bin(self) -> str:
@@ -131,17 +131,17 @@ class SystemEnvironment(VyperEnvironment):
 
 class SerpentEnvironment(VyperEnvironment):
     """
-    Environnement utilisant un venv géré par serpent.
+    Environment using a serpent-managed venv.
 
-    Crée/utilise un environnement virtuel dédié avec la version
-    spécifique de Vyper installée via uv.
+    Creates/uses a dedicated virtual environment with the specific
+    Vyper version installed via uv.
     """
 
     def __init__(self, vyper_version: str) -> None:
         self._vyper_version = vyper_version
         self._venv_path = ensure_vyper_version(vyper_version)
         logger.info(
-            "Utilisation de vyper %s depuis le venv serpent : %s",
+            "Using vyper %s from serpent venv: %s",
             vyper_version,
             self._venv_path,
         )
@@ -156,23 +156,23 @@ class SerpentEnvironment(VyperEnvironment):
 
     @property
     def venv_path(self) -> Path:
-        """Retourne le chemin vers le venv géré."""
+        """Returns the path to the managed venv."""
         return self._venv_path
 
 
 def resolve_environment(vyper_version: str) -> VyperEnvironment:
     """
-    Résout l'environnement approprié pour la version Vyper donnée.
+    Resolves the appropriate environment for the given Vyper version.
 
-    Si l'environnement Python courant a la version requise de Vyper,
-    retourne un SystemEnvironment. Sinon, retourne un SerpentEnvironment
-    qui créera/utilisera un venv dédié.
+    If the current Python environment has the required Vyper version,
+    returns a SystemEnvironment. Otherwise, returns a SerpentEnvironment
+    that will create/use a dedicated venv.
 
     Args:
-        vyper_version: La version de Vyper requise.
+        vyper_version: The required Vyper version.
 
     Returns:
-        L'instance VyperEnvironment appropriée.
+        The appropriate VyperEnvironment instance.
     """
     from serpent_lsp import utils
 

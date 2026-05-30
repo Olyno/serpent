@@ -1,7 +1,7 @@
 """
-Configuration du logging pour serpent_lsp.
+Logging configuration for serpent_lsp.
 
-Deux handlers : console (stderr) et LSP (window/logMessage vers le client).
+Two handlers: console (stderr) and LSP (window/logMessage to client).
 """
 
 import logging
@@ -12,7 +12,7 @@ from pygls.lsp.server import LanguageServer
 
 
 class LspLogHandler(logging.Handler):
-    """Handler de log qui envoie les messages au client LSP via window/logMessage."""
+    """Log handler that sends messages to the LSP client via window/logMessage."""
 
     LEVEL_TO_MESSAGE_TYPE = {
         logging.CRITICAL: MessageType.Error,
@@ -27,7 +27,7 @@ class LspLogHandler(logging.Handler):
         self.ls = ls
 
     def emit(self, record: logging.LogRecord) -> None:
-        """Émet un log vers le client LSP."""
+        """Emits a log to the LSP client."""
         try:
             message = self.format(record)
             if self.ls and hasattr(self.ls, "window_log_message"):
@@ -45,20 +45,20 @@ def setup_logging(
     ls: LanguageServer, level: int = logging.INFO
 ) -> logging.Logger:
     """
-    Configure le logging pour une instance de serveur LSP.
+    Configures logging for an LSP server instance.
 
     Args:
-        ls: L'instance du serveur LSP.
-        level: Niveau de log minimum.
+        ls: The LSP server instance.
+        level: Minimum log level.
 
     Returns:
-        Le logger configuré.
+        The configured logger.
     """
     logger = logging.getLogger("serpent_lsp")
     logger.setLevel(level)
 
     if not logger.hasHandlers():
-        # Handler console (stderr)
+        # Console handler (stderr)
         console_handler = logging.StreamHandler()
         console_handler.setLevel(level)
         console_handler.setFormatter(
@@ -67,7 +67,7 @@ def setup_logging(
             )
         )
 
-        # Handler LSP
+        # LSP handler
         lsp_handler = LspLogHandler(ls)
         lsp_handler.setLevel(level)
         lsp_handler.setFormatter(
@@ -82,10 +82,10 @@ def setup_logging(
 
 def configure_logging(level: str = "INFO") -> None:
     """
-    Configure le logging basique (console uniquement) pour l'entrée principale.
+    Configures basic logging (console only) for the main entry point.
 
     Args:
-        level: Niveau de log sous forme de chaîne.
+        level: Log level as a string.
     """
     log_level = getattr(logging, level.upper(), logging.INFO)
     logging.basicConfig(

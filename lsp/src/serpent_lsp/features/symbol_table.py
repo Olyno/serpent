@@ -1,8 +1,8 @@
 """
-Table de symboles unifiée pour le Vyper Language Server.
+Unified symbol table for the Vyper Language Server.
 
-Stocke tous les symboles avec métadonnées riches (type, portée, patterns d'accès),
-utilisée par les fonctionnalités de navigation, complétion et symboles.
+Stores all symbols with rich metadata (type, scope, access patterns),
+used by navigation, completion, and symbol features.
 """
 
 from dataclasses import dataclass, field
@@ -15,25 +15,25 @@ from serpent_lsp.ast import nodes
 from serpent_lsp.ast.nodes import BaseNode
 from serpent_lsp.utils import range_from_node
 
-# Un pattern de référence = (chaîne, allow_prefix_match)
-# - chaîne : liste d'identifiants (ex: ["self", "foo"])
-# - allow_prefix_match : si True, accepte les chaînes qui commencent par ce pattern
+# A reference pattern = (chain, allow_prefix_match)
+# - chain: list of identifiers (e.g. ["self", "foo"])
+# - allow_prefix_match: if True, accepts chains starting with this pattern
 ReferencePattern = Tuple[List[str], bool]
 
 
 @dataclass
 class SymbolEntry:
     """
-    Représente un symbole dans la table des symboles.
+    Represents a symbol in the symbol table.
 
-    Attributs:
-        name: Nom identifiant du symbole.
-        node: Nœud AST où le symbole est défini.
-        kind: Le SymbolKind LSP (Variable, Function, Constant, etc.).
-        scope: Nom de la portée ("module" pour module, ou nom de fonction pour locales).
-        access_patterns: Comment le symbole est accédé (ex: [["self", "foo"]]).
-        parent_function: FunctionDef contenante pour les variables locales.
-        children: Symboles enfants (paramètres, champs, etc.).
+    Attributes:
+        name: Identifier name of the symbol.
+        node: AST node where the symbol is defined.
+        kind: The LSP SymbolKind (Variable, Function, Constant, etc.).
+        scope: Scope name ("module" for module, or function name for locals).
+        access_patterns: How the symbol is accessed (e.g. [["self", "foo"]]).
+        parent_function: Containing FunctionDef for local variables.
+        children: Child symbols (parameters, fields, etc.).
     """
 
     name: str
@@ -45,11 +45,11 @@ class SymbolEntry:
     children: List["SymbolEntry"] = field(default_factory=list)
 
     def is_local(self) -> bool:
-        """Vérifie si ce symbole est une variable locale (pas niveau module)."""
+        """Check if this symbol is a local variable (not module-level)."""
         return self.scope != "module"
 
     def to_document_symbol(self) -> types.DocumentSymbol:
-        """Convertit cette entrée en DocumentSymbol LSP."""
+        """Convert this entry to an LSP DocumentSymbol."""
         children_symbols = [
             child.to_document_symbol() for child in self.children
         ]
@@ -64,13 +64,13 @@ class SymbolEntry:
 
 class SymbolTable:
     """
-    Table des symboles centralisée pour un module Vyper.
+    Centralized symbol table for a Vyper module.
 
-    Fournit :
-    - Résolution de symboles (pour go-to-definition)
-    - Génération de patterns de référence (pour find-references)
-    - Génération de symboles de document (pour l'outline)
-    - Espace de noms pour la compatibilité legacy
+    Provides:
+    - Symbol resolution (for go-to-definition)
+    - Reference pattern generation (for find-references)
+    - Document symbol generation (for the outline)
+    - Namespace for legacy compatibility
     """
 
     def __init__(self) -> None:
@@ -80,52 +80,52 @@ class SymbolTable:
         self._module_namespace: Dict[str, Any] = {"self": {}}
 
     def add(self, entry: SymbolEntry) -> None:
-        """Ajoute une entrée à la table."""
+        """Add an entry to the table."""
         self.entries.append(entry)
 
-        # Indexer par nom
+        # Index by name
         if entry.name not in self._by_name:
             self._by_name[entry.name] = []
         self._by_name[entry.name].append(entry)
 
-        # Indexer par portée
+        # Index by scope
         if entry.scope not in self._by_scope:
             self._by_scope[entry.scope] = []
         self._by_scope[entry.scope].append(entry)
 
-        # Peupler l'espace de noms legacy pour les symboles module
+        # Populate the legacy namespace for module symbols
         if entry.scope == "module":
             self._add_to_namespace(entry)
 
     def _add_to_namespace(self, entry: SymbolEntry) -> None:
-        """Ajoute un symbole module à l'espace de noms legacy."""
+        """Add a module symbol to the legacy namespace."""
         for pattern, _ in entry.access_patterns:
             if len(pattern) == 1:
-                # Accès direct (constantes, flags, etc.)
+                # Direct access (constants, flags, etc.)
                 self._module_namespace[pattern[0]] = entry.node
             elif len(pattern) == 2 and pattern[0] == "self":
-                # Accès self.x (variables d'état, fonctions)
+                # self.x access (state variables, functions)
                 self._module_namespace["self"][pattern[1]] = entry.node
 
     @property
     def namespace(self) -> Dict[str, Any]:
-        """Retourne l'espace de noms legacy pour compatibilité."""
+        """Return the legacy namespace for compatibility."""
         return self._module_namespace
 
     def get_by_name(self, name: str) -> List[SymbolEntry]:
-        """Récupère tous les symboles portant un nom donné."""
+        """Retrieve all symbols with a given name."""
         return self._by_name.get(name, [])
 
     def get_by_scope(self, scope: str) -> List[SymbolEntry]:
-        """Récupère tous les symboles dans une portée donnée."""
+        """Retrieve all symbols in a given scope."""
         return self._by_scope.get(scope, [])
 
     def get_module_symbols(self) -> List[SymbolEntry]:
-        """Récupère tous les symboles au niveau module."""
+        """Retrieve all module-level symbols."""
         return self.get_by_scope("module")
 
     def get_local_symbols(self, function_name: str) -> List[SymbolEntry]:
-        """Récupère tous les symboles locaux d'une fonction."""
+        """Retrieve all local symbols of a function."""
         return self.get_by_scope(function_name)
 
     def resolve(
@@ -135,20 +135,20 @@ class SymbolTable:
         enclosing_function: Optional[nodes.FunctionDef] = None,
     ) -> Optional[SymbolEntry]:
         """
-        Résout une chaîne d'identifiants vers une entrée de symbole.
+        Resolve an identifier chain to a symbol entry.
 
         Args:
-            chain: Chaîne d'identifiants (ex: ['self', 'foo']).
-            position: Position du curseur (pour la portée).
-            enclosing_function: Fonction contenant la position.
+            chain: Chain of identifiers (e.g. ['self', 'foo']).
+            position: Cursor position (for scope).
+            enclosing_function: Function containing the position.
 
         Returns:
-            L'entrée résolue, ou None.
+            The resolved entry, or None.
         """
         if not chain:
             return None
 
-        # Pour les noms simples, vérifier d'abord la portée locale
+        # For simple names, check local scope first
         if len(chain) == 1 and enclosing_function is not None:
             name = chain[0]
             if enclosing_function.name:
@@ -156,27 +156,27 @@ class SymbolTable:
                 if local_entry is not None:
                     return local_entry
 
-        # Essayer la résolution module
+        # Try module resolution
         return self._resolve_module(chain)
 
     def _resolve_local(
         self, name: str, function_name: str
     ) -> Optional[SymbolEntry]:
-        """Résout un nom dans la portée locale d'une fonction."""
+        """Resolve a name in a function's local scope."""
         for entry in self.get_by_scope(function_name):
             if entry.name == name:
                 return entry
         return None
 
     def _resolve_module(self, chain: List[str]) -> Optional[SymbolEntry]:
-        """Résout une chaîne dans la portée module."""
-        # Essayer correspondance exacte
+        """Resolve a chain in the module scope."""
+        # Try exact match
         for entry in self.get_module_symbols():
             for pattern, allow_prefix in entry.access_patterns:
                 if list(chain) == pattern:
                     return entry
 
-        # Essayer avec préfixe self pour les noms simples
+        # Try with self prefix for simple names
         if len(chain) == 1:
             self_chain = ["self"] + chain
             for entry in self.get_module_symbols():
@@ -189,15 +189,15 @@ class SymbolTable:
     def get_reference_patterns(
         self, entry: SymbolEntry
     ) -> List[ReferencePattern]:
-        """Retourne les patterns de référence pour un symbole."""
+        """Return the reference patterns for a symbol."""
         return entry.access_patterns
 
     def get_document_symbols(self) -> List[types.DocumentSymbol]:
         """
-        Génère les DocumentSymbols LSP pour la vue outline.
+        Generate LSP DocumentSymbols for the outline view.
 
         Returns:
-            Liste des symboles de niveau module.
+            List of module-level symbols.
         """
         return [
             entry.to_document_symbol()
@@ -207,9 +207,9 @@ class SymbolTable:
 
     def external_namespace(self) -> Dict[str, Any]:
         """
-        Retourne l'espace de noms visible par les modules importateurs.
+        Return the namespace visible to importing modules.
 
-        Fusionne les noms module et les noms self (sans le préfixe).
+        Merges module names and self names (without the prefix).
         """
         result: Dict[str, Any] = {}
         for k, v in self._module_namespace.items():
@@ -220,19 +220,19 @@ class SymbolTable:
 
 
 # =============================================================================
-# Inférence de type de symbole
+# Symbol type inference
 # =============================================================================
 
 
 def infer_symbol_kind(node: BaseNode) -> SymbolKind:
     """
-    Infère le SymbolKind LSP pour un nœud AST.
+    Infer the LSP SymbolKind for an AST node.
 
     Args:
-        node: Le nœud AST à analyser.
+        node: The AST node to analyze.
 
     Returns:
-        Le SymbolKind approprié.
+        The appropriate SymbolKind.
     """
     if isinstance(node, nodes.FunctionDef):
         return SymbolKind.Function
@@ -276,7 +276,7 @@ def infer_symbol_kind(node: BaseNode) -> SymbolKind:
 
 
 def _is_constant_annotation(node: nodes.AnnAssign) -> bool:
-    """Vérifie si un nœud AnnAssign est une déclaration constant/immutable."""
+    """Check if an AnnAssign node is a constant/immutable declaration."""
     if not isinstance(node.annotation, nodes.Call):
         return False
     func = node.annotation.func
@@ -284,7 +284,7 @@ def _is_constant_annotation(node: nodes.AnnAssign) -> bool:
 
 
 # =============================================================================
-# Construction des patterns d'accès
+# Access pattern construction
 # =============================================================================
 
 
@@ -292,24 +292,24 @@ def build_access_patterns(
     node: BaseNode, scope: str = "module"
 ) -> List[ReferencePattern]:
     """
-    Construit les patterns d'accès pour un symbole.
+    Build access patterns for a symbol.
 
     Args:
-        node: Le nœud AST définissant le symbole.
-        scope: La portée ("module" ou nom de fonction).
+        node: The AST node defining the symbol.
+        scope: The scope ("module" or function name).
 
     Returns:
-        Liste de tuples (chaîne, allow_prefix_match).
+        List of tuples (chain, allow_prefix_match).
     """
     identifier = _get_identifier(node)
     if not identifier:
         return []
 
-    # Variables locales : accès direct par nom
+    # Local variables: direct access by name
     if scope != "module":
         return [([identifier], False)]
 
-    # Symboles module : patterns d'accès différents selon le type
+    # Module symbols: different access patterns by type
     if isinstance(node, nodes.VariableDecl):
         if node.is_constant or node.is_immutable:
             return [([identifier], False)]
@@ -326,18 +326,18 @@ def build_access_patterns(
         return [(["self", identifier], False)]
 
     if isinstance(node, nodes.FlagDef):
-        # Flags : autorise le préfixe (ex: Status.ACTIVE)
+        # Flags: allow prefix (e.g. Status.ACTIVE)
         return [([identifier], True)]
 
     if isinstance(node, (nodes.EventDef, nodes.StructDef, nodes.InterfaceDef)):
         return [([identifier], False)]
 
-    # Par défaut : accès direct
+    # Default: direct access
     return [([identifier], False)]
 
 
 def _get_identifier(node: BaseNode) -> Optional[str]:
-    """Extrait le nom identifiant d'un nœud."""
+    """Extract the identifier name from a node."""
     target = getattr(node, "target", None)
     if target is not None:
         return getattr(target, "id", None)

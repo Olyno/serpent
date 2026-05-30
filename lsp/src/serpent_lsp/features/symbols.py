@@ -1,8 +1,8 @@
 """
-Extraction des symboles de document pour le Vyper Language Server.
+Document symbol extraction for the Vyper Language Server.
 
-Fournit les symboles de document (fonctions, variables, structs, etc.)
-pour la navigation dans l'IDE (outline view).
+Provides document symbols (functions, variables, structs, etc.)
+for IDE navigation (outline view).
 """
 
 import logging
@@ -17,12 +17,12 @@ logger = logging.getLogger("serpent_lsp")
 
 def get_document_symbols(module: Module) -> List[types.DocumentSymbol]:
     """
-    Extrait tous les symboles de document d'un module Vyper parsé.
+    Extracts all document symbols from a parsed Vyper module.
 
     Args:
-        module: Le module Vyper parsé.
+        module: The parsed Vyper module.
 
     Returns:
-        Liste de DocumentSymbol représentant les symboles du module.
+        List of DocumentSymbol representing the module symbols.
     """
     return module.symbol_table.get_document_symbols()

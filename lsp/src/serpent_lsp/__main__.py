@@ -1,7 +1,7 @@
 """
-Point d'entrée pour `python -m serpent_lsp` ou `uv run -m serpent_lsp`.
+Entry point for `python -m serpent_lsp` or `uv run -m serpent_lsp`.
 
-Utilise argparse pour accepter les options standard et lance le serveur LSP.
+Uses argparse to accept standard options and starts the LSP server.
 """
 
 import argparse
@@ -12,10 +12,10 @@ from serpent_lsp.server import server
 
 
 def main() -> None:
-    """Point d'entrée principal du Language Server Vyper."""
+    """Main entry point for the Vyper Language Server."""
     parser = argparse.ArgumentParser(
         prog="serpent-lsp",
-        description="Serveur LSP pour Vyper (Language Server Protocol)",
+        description="LSP Server for Vyper (Language Server Protocol)",
     )
     parser.add_argument(
         "--version", action="version", version="serpent-lsp 0.1.0"
@@ -24,9 +24,9 @@ def main() -> None:
         "--log-level",
         default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
-        help="Niveau de log (défaut: INFO)",
+        help="Log level (default: INFO)",
     )
-    # Les arguments inconnus sont ignorés pour compatibilité avec pygls
+    # Unknown arguments are ignored for pygls compatibility
     args, _ = parser.parse_known_args()
 
     configure_logging(level=args.log_level)
@@ -36,7 +36,7 @@ def main() -> None:
     except KeyboardInterrupt:
         sys.exit(0)
     except Exception as exc:
-        print(f"Erreur fatale au démarrage du serveur: {exc}", file=sys.stderr)
+        print(f"Fatal error starting server: {exc}", file=sys.stderr)
         sys.exit(1)
 
 

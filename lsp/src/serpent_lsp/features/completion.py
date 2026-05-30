@@ -1,10 +1,10 @@
 """
-Complétion de code pour le Vyper Language Server.
+Code completion for the Vyper Language Server.
 
-Fournit l'autocomplétion pour :
-- `self.` — variables d'état (non-constantes, non-immutables) et fonctions internes
-- `<module>.` — symboles des modules importés
-- Mots-clés Vyper et builtins
+Provides autocompletion for:
+- `self.` — state variables (non-constant, non-immutable) and internal functions
+- `<module>.` — symbols of imported modules
+- Vyper keywords and builtins
 """
 
 import logging
@@ -21,11 +21,11 @@ from serpent_lsp.parser import Module
 
 logger = logging.getLogger("serpent_lsp")
 
-# Pattern pour détecter le contexte de déclenchement : "self." ou "<ident>."
+# Pattern to detect trigger context: "self." or "<ident>."
 _TRIGGER_PATTERN = re.compile(r"([A-Za-z_][A-Za-z_0-9]*)\.")
 
 
-# Mots-clés Vyper
+# Vyper keywords
 _VYPER_KEYWORDS = [
     "def", "event", "struct", "flag", "interface",
     "if", "elif", "else", "for", "in", "while",
@@ -36,14 +36,14 @@ _VYPER_KEYWORDS = [
     "log", "self", "range", "empty",
 ]
 
-# Types builtins Vyper
+# Vyper builtin types
 _VYPER_TYPES = [
     "uint256", "int128", "uint8", "int256",
     "bool", "address", "bytes32", "Bytes", "String",
     "decimal", "DynArray", "HashMap",
 ]
 
-# Variables globales builtins
+# Builtin global variables
 _VYPER_BUILTINS = [
     "msg", "block", "chain", "tx", "self", "empty",
     "as_wei_value", "ceil", "floor",
@@ -66,14 +66,14 @@ def _get_trigger_context(
     doc: TextDocument, position: types.Position
 ) -> Optional[str]:
     """
-    Récupère l'identifiant avant le point qui a déclenché la complétion.
+    Gets the identifier before the dot that triggered completion.
 
     Args:
-        doc: Le document texte.
-        position: La position du curseur.
+        doc: The text document.
+        position: The cursor position.
 
     Returns:
-        L'identifiant (ex: "self", "MyModule"), ou None.
+        The identifier (e.g. "self", "MyModule"), or None.
     """
     try:
         line = doc.lines[position.line]
@@ -90,7 +90,7 @@ def _get_trigger_context(
 def _symbol_kind_to_completion_kind(
     kind: types.SymbolKind,
 ) -> types.CompletionItemKind:
-    """Convertit un SymbolKind LSP en CompletionItemKind."""
+    """Converts an LSP SymbolKind to CompletionItemKind."""
     mapping = {
         types.SymbolKind.Function: CompletionItemKind.Function,
         types.SymbolKind.Method: CompletionItemKind.Method,
@@ -107,7 +107,7 @@ def _symbol_kind_to_completion_kind(
 
 
 def _is_internal_function(func: nodes.FunctionDef) -> bool:
-    """Vérifie si une fonction est interne (pas external/public)."""
+    """Checks if a function is internal (not external/public)."""
     for decorator in func.decorator_list:
         if isinstance(decorator, nodes.Name):
             if decorator.id in ("external", "public"):
@@ -120,7 +120,7 @@ def _is_internal_function(func: nodes.FunctionDef) -> bool:
 
 
 def _get_function_signature(func: nodes.FunctionDef) -> str:
-    """Obtient la signature d'une fonction pour l'affichage."""
+    """Gets the signature of a function for display."""
     args_str = ""
     if func.args and func.args.args:
         arg_parts = []
@@ -144,7 +144,7 @@ def _get_function_signature(func: nodes.FunctionDef) -> str:
 
 
 def _get_variable_type(var: nodes.VariableDecl) -> Optional[str]:
-    """Obtient l'annotation de type d'une variable."""
+    """Gets the type annotation of a variable."""
     if var.annotation:
         if isinstance(var.annotation, nodes.Name):
             return var.annotation.id
@@ -156,18 +156,18 @@ def _get_variable_type(var: nodes.VariableDecl) -> Optional[str]:
 
 def get_self_completions(module: Module) -> List[types.CompletionItem]:
     """
-    Obtient les complétions pour `self.` :
-    variables d'état et fonctions internes.
+    Gets completions for `self.`:
+    state variables and internal functions.
 
     Args:
-        module: Le module courant.
+        module: The current module.
 
     Returns:
-        Liste de CompletionItem.
+        List of CompletionItem.
     """
     completions: List[types.CompletionItem] = []
 
-    # Variables d'état (non-constantes, non-immutables)
+    # State variables (non-constant, non-immutable)
     for var_node in module.variables:
         if isinstance(var_node, nodes.VariableDecl):
             if var_node.is_constant or var_node.is_immutable:
@@ -178,18 +178,18 @@ def get_self_completions(module: Module) -> List[types.CompletionItem]:
                 continue
 
             var_type = _get_variable_type(var_node)
-            detail = var_type if var_type else "variable d'état"
+            detail = var_type if var_type else "state variable"
 
             completions.append(
                 types.CompletionItem(
                     label=name,
                     kind=CompletionItemKind.Variable,
                     detail=detail,
-                    documentation=f"Variable d'état : {name}",
+                    documentation=f"State variable: {name}",
                 )
             )
 
-    # Fonctions internes
+    # Internal functions
     for func_node in module.functions:
         if isinstance(func_node, nodes.FunctionDef):
             if not _is_internal_function(func_node):
@@ -206,7 +206,7 @@ def get_self_completions(module: Module) -> List[types.CompletionItem]:
                     label=name,
                     kind=CompletionItemKind.Function,
                     detail=signature,
-                    documentation=f"Fonction interne : {name}{signature}",
+                    documentation=f"Internal function: {name}{signature}",
                     insert_text=f"{name}($0)",
                     insert_text_format=InsertTextFormat.Snippet,
                 )
@@ -222,16 +222,16 @@ def get_module_completions(
     import_name: str,
 ) -> List[types.CompletionItem]:
     """
-    Obtient les complétions pour un module importé.
+    Gets completions for an imported module.
 
     Args:
-        get_module_func: Fonction pour obtenir un module.
-        workspace: Le workspace LSP.
-        current_module: Le module courant.
-        import_name: Le nom de l'import (ex: "MyInterface").
+        get_module_func: Function to get a module.
+        workspace: The LSP workspace.
+        current_module: The current module.
+        import_name: The import name (e.g. "MyInterface").
 
     Returns:
-        Liste de CompletionItem.
+        List of CompletionItem.
     """
     completions: List[types.CompletionItem] = []
 
@@ -265,7 +265,7 @@ def get_module_completions(
                     label=name,
                     kind=CompletionItemKind.Function,
                     detail=signature,
-                    documentation=f"Fonction : {name}{signature}",
+                    documentation=f"Function: {name}{signature}",
                     insert_text=f"{name}($0)",
                     insert_text_format=InsertTextFormat.Snippet,
                 )
@@ -323,7 +323,7 @@ def get_module_completions(
 
 
 def get_keyword_completions() -> List[types.CompletionItem]:
-    """Retourne les complétions de mots-clés Vyper."""
+    """Returns Vyper keyword completions."""
     completions: List[types.CompletionItem] = []
 
     for kw in _VYPER_KEYWORDS:
@@ -331,7 +331,7 @@ def get_keyword_completions() -> List[types.CompletionItem]:
             types.CompletionItem(
                 label=kw,
                 kind=CompletionItemKind.Keyword,
-                detail="mot-clé",
+                detail="keyword",
             )
         )
 
@@ -364,29 +364,29 @@ def get_completions(
     position: types.Position,
 ) -> List[types.CompletionItem]:
     """
-    Obtient les éléments de complétion pour la position donnée.
+    Gets completion items for the given position.
 
     Args:
-        get_module_func: Fonction pour obtenir un module.
-        workspace: Le workspace LSP.
-        doc: Le document courant.
-        module: Le module courant.
-        position: Position du curseur.
+        get_module_func: Function to get a module.
+        workspace: The LSP workspace.
+        doc: The current document.
+        module: The current module.
+        position: Cursor position.
 
     Returns:
-        Liste de CompletionItem.
+        List of CompletionItem.
     """
     trigger = _get_trigger_context(doc, position)
 
     if trigger == "self":
         return get_self_completions(module)
     elif trigger is not None:
-        # Essayer de résoudre comme module importé
+        # Try to resolve as imported module
         module_completions = get_module_completions(
             get_module_func, workspace, module, trigger
         )
         if module_completions:
             return module_completions
 
-    # Complétion générale : mots-clés et builtins
+    # General completion: keywords and builtins
     return get_keyword_completions()

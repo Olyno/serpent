@@ -1,8 +1,8 @@
 """
-Fonctionnalité go-to-definition pour le Vyper Language Server.
+Go-to-definition feature for the Vyper Language Server.
 
-Résout les symboles vers leur emplacement de définition
-à travers les modules.
+Resolves symbols to their definition location
+across modules.
 """
 
 import logging
@@ -26,17 +26,17 @@ def get_definition_location(
     position: types.Position,
 ) -> Optional[types.Location]:
     """
-    Obtient l'emplacement de définition du symbole à la position donnée.
+    Gets the definition location of the symbol at the given position.
 
     Args:
-        get_module_func: Fonction pour obtenir un module à partir d'un document.
-        workspace: Le workspace LSP.
-        doc: Le document courant.
-        module: Le module courant.
-        position: La position du curseur.
+        get_module_func: Function to get a module from a document.
+        workspace: The LSP workspace.
+        doc: The current document.
+        module: The current module.
+        position: The cursor position.
 
     Returns:
-        Location de la définition, ou None si non trouvée.
+        Location of the definition, or None if not found.
     """
     attribute_word = utils.get_attribute_word(doc, position)
     if not attribute_word:
@@ -49,7 +49,7 @@ def get_definition_location(
         return None
 
     if resolved.node is None:
-        # Pointe vers un import lui-même, aller au début du fichier importé
+        # Points to an import itself, go to the beginning of the imported file
         return utils.location_from_start(resolved.uri)
 
     return types.Location(

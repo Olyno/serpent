@@ -1,8 +1,8 @@
 """
-Nœuds AST pour le Vyper Language Server.
+AST nodes for the Vyper Language Server.
 
-Dataclasses représentant chaque type de nœud dans l'AST Vyper,
-avec informations de position (ligne, colonne) pour le LSP.
+Dataclasses representing each node type in the Vyper AST,
+with position information (line, column) for LSP.
 """
 
 from dataclasses import dataclass, field
@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Type
 
 @dataclass(eq=False)
 class BaseNode:
-    """Nœud de base pour l'AST Vyper avec informations de position."""
+    """Base node for the Vyper AST with position information."""
 
     ast_type: str
     src: Optional[str] = None
@@ -33,7 +33,7 @@ class BaseNode:
 
 @dataclass(eq=False)
 class TopLevel(BaseNode):
-    """Nœud de haut niveau avec un nom et un corps."""
+    """Top-level node with a name and a body."""
 
     name: Optional[str] = None
     body: List[Any] = field(default_factory=list)
@@ -42,7 +42,7 @@ class TopLevel(BaseNode):
 
 @dataclass(eq=False)
 class Module(TopLevel):
-    """Nœud racine représentant un module/fichier Vyper."""
+    """Root node representing a Vyper module/file."""
 
     path: Optional[str] = None
     body: List[Any] = field(default_factory=list)
@@ -55,7 +55,7 @@ class Module(TopLevel):
 
 @dataclass(eq=False)
 class FunctionDef(TopLevel):
-    """Définition de fonction Vyper."""
+    """Vyper function definition."""
 
     args: Optional[Any] = None
     returns: Optional[Any] = None
@@ -72,7 +72,7 @@ class DocStr(BaseNode):
 
 @dataclass(eq=False)
 class arguments(BaseNode):
-    """Arguments d'une fonction."""
+    """Function arguments."""
 
     args: List[Any] = field(default_factory=list)
     defaults: List[Any] = field(default_factory=list)
@@ -81,7 +81,7 @@ class arguments(BaseNode):
 
 @dataclass(eq=False)
 class arg(BaseNode):
-    """Un argument de fonction."""
+    """A function argument."""
 
     arg: str = ""
     annotation: Optional[Any] = None
@@ -89,7 +89,7 @@ class arg(BaseNode):
 
 @dataclass(eq=False)
 class Return(BaseNode):
-    """Instruction return."""
+    """Return statement."""
 
     value: Optional[Any] = None
 
@@ -103,7 +103,7 @@ class Expr(BaseNode):
 
 @dataclass(eq=False)
 class NamedExpr(BaseNode):
-    """Expression nommée (walrus)."""
+    """Named expression (walrus)."""
 
     target: Any = None
     value: Any = None
@@ -111,84 +111,84 @@ class NamedExpr(BaseNode):
 
 @dataclass(eq=False)
 class Log(BaseNode):
-    """Instruction log."""
+    """Log statement."""
 
     value: Any = None
 
 
 @dataclass(eq=False)
 class FlagDef(TopLevel):
-    """Définition de flag (enum)."""
+    """Flag definition (enum)."""
 
     pass
 
 
 @dataclass(eq=False)
 class EventDef(TopLevel):
-    """Définition d'événement."""
+    """Event definition."""
 
     pass
 
 
 @dataclass(eq=False)
 class InterfaceDef(TopLevel):
-    """Définition d'interface."""
+    """Interface definition."""
 
     pass
 
 
 @dataclass(eq=False)
 class StructDef(TopLevel):
-    """Définition de structure."""
+    """Struct definition."""
 
     pass
 
 
 @dataclass(eq=False)
 class ExprNode(BaseNode):
-    """Nœud d'expression de base."""
+    """Base expression node."""
 
     pass
 
 
 @dataclass(eq=False)
 class Constant(ExprNode):
-    """Valeur constante."""
+    """Constant value."""
 
     value: Any = None
 
 
 @dataclass(eq=False)
 class Num(Constant):
-    """Nombre générique."""
+    """Generic number."""
 
     pass
 
 
 @dataclass(eq=False)
 class Int(Num):
-    """Entier."""
+    """Integer."""
 
     pass
 
 
 @dataclass(eq=False)
 class Decimal(Num):
-    """Nombre décimal."""
+    """Decimal number."""
 
     pass
 
 
 @dataclass(eq=False)
 class Hex(Constant):
-    """Valeur hexadécimale."""
+    """Hexadecimal value."""
 
     value: str = ""
 
 
 @dataclass(eq=False)
 class Str(Constant):
-    """Chaîne de caractères."""
+    """String."""
 
     value: str = ""
 
@@ -202,28 +202,28 @@ class Bytes(Constant):
 
 @dataclass(eq=False)
 class HexBytes(BaseNode):
-    """Bytes hexadécimaux."""
+    """Hexadecimal bytes."""
 
     value: Optional[bytes] = None
 
 
 @dataclass(eq=False)
 class ListNode(BaseNode):
-    """Liste (évite le conflit avec built-in list)."""
+    """List (avoids conflict with built-in list)."""
 
     elements: List[Any] = field(default_factory=list)
 
 
 @dataclass(eq=False)
 class TupleNode(BaseNode):
-    """Tuple (évite le conflit avec built-in tuple)."""
+    """Tuple (avoids conflict with built-in tuple)."""
 
     elements: List[Any] = field(default_factory=list)
 
 
 @dataclass(eq=False)
 class NameConstant(BaseNode):
-    """Constante nommée (True, False, None)."""
+    """Named constant (True, False, None)."""
 
     value: Any = None
 
@@ -237,7 +237,7 @@ class Ellipsis(BaseNode):
 
 @dataclass(eq=False)
 class DictNode(BaseNode):
-    """Dictionnaire (évite le conflit avec built-in Dict)."""
+    """Dictionary (avoids conflict with built-in Dict)."""
 
     keys: List[Any] = field(default_factory=list)
     values: List[Any] = field(default_factory=list)
@@ -245,14 +245,14 @@ class DictNode(BaseNode):
 
 @dataclass(eq=False)
 class Name(BaseNode):
-    """Référence à un identifiant."""
+    """Reference to an identifier."""
 
     id: str = ""
 
 
 @dataclass(eq=False)
 class UnaryOp(BaseNode):
-    """Opération unaire."""
+    """Unary operation."""
 
     op: Any = None
     operand: Any = None
@@ -260,35 +260,35 @@ class UnaryOp(BaseNode):
 
 @dataclass(eq=False)
 class Operator(BaseNode):
-    """Opérateur."""
+    """Operator."""
 
     pass
 
 
 @dataclass(eq=False)
 class USub(BaseNode):
-    """Opérateur moins unaire."""
+    """Unary minus operator."""
 
     pass
 
 
 @dataclass(eq=False)
 class Not(BaseNode):
-    """Opérateur not."""
+    """Not operator."""
 
     pass
 
 
 @dataclass(eq=False)
 class Invert(BaseNode):
-    """Opérateur inversion."""
+    """Invert operator."""
 
     pass
 
 
 @dataclass(eq=False)
 class BinOp(BaseNode):
-    """Opération binaire."""
+    """Binary operation."""
 
     left: Any = None
     op: Any = None
@@ -357,7 +357,7 @@ class RShift(BaseNode):
 
 @dataclass(eq=False)
 class BoolOp(BaseNode):
-    """Opération booléenne."""
+    """Boolean operation."""
 
     op: Any = None
     values: List[Any] = field(default_factory=list)
@@ -375,7 +375,7 @@ class Or(BaseNode):
 
 @dataclass(eq=False)
 class Compare(BaseNode):
-    """Comparaison."""
+    """Comparison."""
 
     left: Any = None
     op: Any = None
@@ -424,7 +424,7 @@ class NotIn(BaseNode):
 
 @dataclass(eq=False)
 class Call(BaseNode):
-    """Appel de fonction."""
+    """Function call."""
 
     func: Any = None
     args: List[Any] = field(default_factory=list)
@@ -433,21 +433,21 @@ class Call(BaseNode):
 
 @dataclass(eq=False)
 class ExtCall(BaseNode):
-    """Appel externe."""
+    """External call."""
 
     value: Any = None
 
 
 @dataclass(eq=False)
 class StaticCall(BaseNode):
-    """Appel statique."""
+    """Static call."""
 
     value: Any = None
 
 
 @dataclass(eq=False)
 class keyword(BaseNode):
-    """Argument nommé (keyword)."""
+    """Named argument (keyword)."""
 
     arg: Optional[str] = None
     value: Any = None
@@ -455,7 +455,7 @@ class keyword(BaseNode):
 
 @dataclass(eq=False)
 class Attribute(BaseNode):
-    """Accès à un attribut (ex: self.foo)."""
+    """Attribute access (e.g. self.foo)."""
 
     value: Any = None
     attr: str = ""
@@ -463,7 +463,7 @@ class Attribute(BaseNode):
 
 @dataclass(eq=False)
 class Subscript(BaseNode):
-    """Accès par index (ex: arr[0])."""
+    """Index access (e.g. arr[0])."""
 
     value: Any = None
     slice: Any = None
@@ -471,7 +471,7 @@ class Subscript(BaseNode):
 
 @dataclass(eq=False)
 class Assign(BaseNode):
-    """Assignation simple."""
+    """Simple assignment."""
 
     target: Any = None
     value: Any = None
@@ -479,7 +479,7 @@ class Assign(BaseNode):
 
 @dataclass(eq=False)
 class AnnAssign(BaseNode):
-    """Assignation annotée (avec type)."""
+    """Annotated assignment (with type)."""
 
     target: Any = None
     annotation: Any = None
@@ -488,7 +488,7 @@ class AnnAssign(BaseNode):
 
 @dataclass(eq=False)
 class VariableDecl(BaseNode):
-    """Déclaration de variable d'état Vyper."""
+    """Vyper state variable declaration."""
 
     target: Any = None
     annotation: Any = None
@@ -502,7 +502,7 @@ class VariableDecl(BaseNode):
 
 @dataclass(eq=False)
 class AugAssign(BaseNode):
-    """Assignation augmentée (+=, -=, etc.)."""
+    """Augmented assignment (+=, -=, etc.)."""
 
     op: Any = None
     target: Any = None
@@ -511,14 +511,14 @@ class AugAssign(BaseNode):
 
 @dataclass(eq=False)
 class Raise(BaseNode):
-    """Instruction raise."""
+    """Raise statement."""
 
     exc: Any = None
 
 
 @dataclass(eq=False)
 class Assert(BaseNode):
-    """Instruction assert."""
+    """Assert statement."""
 
     test: Any = None
     msg: Any = None
@@ -526,14 +526,14 @@ class Assert(BaseNode):
 
 @dataclass(eq=False)
 class Pass(BaseNode):
-    """Instruction pass."""
+    """Pass statement."""
 
     pass
 
 
 @dataclass(eq=False)
 class Import(BaseNode):
-    """Instruction import simple."""
+    """Simple import statement."""
 
     name: Optional[str] = None
     alias: Optional[str] = None
@@ -542,7 +542,7 @@ class Import(BaseNode):
 
 @dataclass(eq=False)
 class ImportFrom(BaseNode):
-    """Instruction import from ... ."""
+    """Import from ... statement."""
 
     name: Optional[str] = None
     alias: Optional[str] = None
@@ -553,35 +553,35 @@ class ImportFrom(BaseNode):
 
 @dataclass(eq=False)
 class ImplementsDecl(BaseNode):
-    """Déclaration implements."""
+    """Implements declaration."""
 
     annotation: Any = None
 
 
 @dataclass(eq=False)
 class UsesDecl(BaseNode):
-    """Déclaration uses."""
+    """Uses declaration."""
 
     annotation: Any = None
 
 
 @dataclass(eq=False)
 class InitializesDecl(BaseNode):
-    """Déclaration initializes."""
+    """Initializes declaration."""
 
     annotation: Any = None
 
 
 @dataclass(eq=False)
 class ExportsDecl(BaseNode):
-    """Déclaration exports."""
+    """Exports declaration."""
 
     annotation: Any = None
 
 
 @dataclass(eq=False)
 class If(BaseNode):
-    """Instruction conditionnelle if."""
+    """If conditional statement."""
 
     test: Any = None
     body: List[Any] = field(default_factory=list)
@@ -590,7 +590,7 @@ class If(BaseNode):
 
 @dataclass(eq=False)
 class IfExp(BaseNode):
-    """Expression conditionnelle (ternaire)."""
+    """Conditional expression (ternary)."""
 
     test: Any = None
     body: Any = None
@@ -599,7 +599,7 @@ class IfExp(BaseNode):
 
 @dataclass(eq=False)
 class For(BaseNode):
-    """Boucle for."""
+    """For loop."""
 
     target: Any = None
     iter: Any = None
@@ -608,19 +608,19 @@ class For(BaseNode):
 
 @dataclass(eq=False)
 class Break(BaseNode):
-    """Instruction break."""
+    """Break statement."""
 
     pass
 
 
 @dataclass(eq=False)
 class Continue(BaseNode):
-    """Instruction continue."""
+    """Continue statement."""
 
     pass
 
 
-# Mapping des types AST pour la conversion JSON → dataclasses
+# Mapping of AST types for JSON → dataclass conversion
 AST_CLASS_MAP: Dict[str, Type[BaseNode]] = {
     cls.__name__: cls
     for cls in list(globals().values())

@@ -1,8 +1,8 @@
 """
-Serpent LSP — Serveur de langage (Language Server Protocol) pour Vyper.
+Serpent LSP — Language Server Protocol server for Vyper.
 
-Fournit la navigation (go-to-definition, références), la complétion,
-les diagnostics de compilation et les symboles de document.
+Provides navigation (go-to-definition, references), completion,
+compilation diagnostics, and document symbols.
 """
 
 from serpent_lsp.server import SerpentLanguageServer, server  # noqa: F401
