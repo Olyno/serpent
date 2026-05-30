@@ -1,13 +1,13 @@
 # Serpent — Vyper Language Support
 
-Support de langage Vyper pour **Visual Studio Code** et **Zed**.
+Vyper language support for **Visual Studio Code** and **Zed**.
 
-Serpent est un monorepo regroupant :
+Serpent is a monorepo containing:
 
-- **Extension VSCode** — syntax highlighting, LSP, snippets, compilation
-- **Extension Zed** — grammaire tree-sitter, LSP natif, highlighting
-- **Serpent LSP** — serveur de langage (navigation, complétion, diagnostic, formatage)
-- **Tree-sitter Vyper** — grammaire tree-sitter pour le parsing syntaxique
+- **VSCode Extension** — syntax highlighting, LSP, snippets, compilation
+- **Zed Extension** — tree-sitter grammar, native LSP, highlighting
+- **Serpent LSP** — language server (navigation, completion, diagnostics, formatting)
+- **Tree-sitter Vyper** — tree-sitter grammar for syntax parsing
 
 ---
 
@@ -16,76 +16,74 @@ Serpent est un monorepo regroupant :
 ```
 serpent/
 ├── extensions/
-│   ├── vscode/          # Extension Visual Studio Code (TypeScript + ESM)
-│   └── zed/             # Extension Zed (TOML + tree-sitter queries)
-├── lsp/                 # Serveur LSP (Python + pygls)
+│   ├── vscode/          # Visual Studio Code extension (TypeScript + ESM)
+│   └── zed/             # Zed extension (TOML + tree-sitter queries)
+├── lsp/                 # LSP server (Python + pygls)
 ├── grammars/
-│   └── tree-sitter-vyper/  # Grammaire tree-sitter pour Vyper
+│   └── tree-sitter-vyper/  # Tree-sitter grammar for Vyper
 └── .github/workflows/   # CI/CD
 ```
 
-Le **LSP** (Language Server Protocol) est le coeur partagé : un seul serveur, deux éditeurs.
+The **LSP** (Language Server Protocol) is the shared core: one server, two editors.
 
 ---
 
-## Installation rapide
+## Quick Install
 
 ### Visual Studio Code
 
 ```bash
-# Installer depuis le marketplace VSCode
 code --install-extension serpent.serpent-vscode
+# Or: Extensions > Install from VSIX... > serpent-vscode-x.y.z.vsix
 ```
 
 ### Zed
 
 ```bash
-# Installer depuis l'extension store Zed
+# Install from the Zed extension store
 zed:install-extension serpent-vyper
 ```
 
 ---
 
-## Développement
+## Development
 
-### Prérequis
+### Prerequisites
 
 - **Node.js** ≥ 20
 - **Python** ≥ 3.10
-- **uv** (gestionnaire de paquets Python) — `curl -LsSf https://astral.sh/uv/install.sh | sh`
-- **Biome** (formatage/lint JS) — optionnel, intégré au projet
+- **uv** (Python package manager) — `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- **Biome** (JS formatting/linting) — optional, bundled in the project
 
-### Structure
+### Components
 
-Chaque composant a son propre système de build :
-
-| Composant | Techno | Build |
-|-----------|--------|-------|
+| Component | Stack | Build |
+|-----------|-------|-------|
 | `extensions/vscode/` | TypeScript + ESM | `npm run compile` (esbuild) |
 | `lsp/` | Python + pygls | `uv run -m serpent_lsp` |
 | `grammars/tree-sitter-vyper/` | JavaScript + C | `npx tree-sitter generate` |
-| `extensions/zed/` | TOML déclaratif | Aucun build nécessaire |
+| `extensions/zed/` | Declarative TOML | No build needed |
 
-### Build complet
+### Full Build
 
 ```bash
-# 1. LSP Python
+# 1. Python LSP
 cd lsp
 uv sync
-uv run pytest  # Vérifier que tout passe
+uv run pytest  # Verify everything passes
 
-# 2. Extension VSCode
+# 2. VSCode Extension
 cd ../extensions/vscode
 npm install
 npm run compile  # esbuild → dist/
-npm run test     # Tests d'intégration VSCode
+npm run test     # VSCode integration tests
 
-# 3. Extension Zed
+# 3. Zed Extension
 cd ../zed
-# Valider extension.toml et queries .scm
+# Validate extension.toml and .scm queries
 ```
 
-### Lancer l'extension VSCode en développement
+### Run VSCode Extension in Development
 
 ```bash
 cd extensions/vscode
@@ -93,54 +91,54 @@ code .
 # F5 → Extension Development Host
 ```
 
-### Lancer le LSP manuellement
+### Run LSP Manually
 
 ```bash
 cd lsp
 uv run -m serpent_lsp
-# Le serveur écoute sur stdio (protocole LSP)
+# Server listens on stdio (LSP protocol)
 ```
 
 ---
 
-## Fonctionnalités
+## Features
 
-| Fonctionnalité | VSCode | Zed |
-|---------------|--------|-----|
+| Feature | VSCode | Zed |
+|--------|--------|-----|
 | Syntax highlighting | ✅ TextMate | ✅ Tree-sitter |
 | Semantic highlighting | ✅ LSP | — |
 | Go to definition | ✅ LSP | ✅ LSP |
 | Find references | ✅ LSP | ✅ LSP |
 | Hover (documentation) | ✅ LSP | ✅ LSP |
-| Auto-complétion | ✅ LSP | ✅ LSP |
-| Diagnostics (erreurs) | ✅ LSP | ✅ LSP |
-| **Formatage** (mamushi) | ✅ LSP | ✅ LSP |
+| Auto-completion | ✅ LSP | ✅ LSP |
+| Diagnostics (errors) | ✅ LSP | ✅ LSP |
+| **Formatting** (mamushi) | ✅ LSP | ✅ LSP |
 | Document symbols | ✅ LSP | ✅ LSP |
 | Snippets | ✅ JSON | — |
-| Compilation on save | ✅ | ✅ |
-| Rename symbol | 🚧 Prévu | 🚧 Prévu |
+| Compile on save | ✅ | ✅ |
+| Rename symbol | 🚧 Planned | 🚧 Planned |
 
 ---
 
-## Dépendances
+## Dependencies
 
 ### LSP (Python)
 
-- `pygls ≥ 2.0` — Framework LSP asynchrone
-- `mamushi ≥ 0.1` — Formatter Vyper (basé sur Black)
-- `uv` — Gestion des environnements Vyper
+- `pygls ≥ 2.0` — Async LSP framework
+- `mamushi ≥ 0.1` — Vyper formatter (Black-based)
+- `uv` — Vyper environment management
 
-### Extension VSCode
+### VSCode Extension
 
-- `vscode-languageclient` — Client LSP
+- `vscode-languageclient` — LSP client
 - `esbuild` — Bundler
 
-### Extension Zed
+### Zed Extension
 
-Aucune dépendance externe — configuration déclarative pure.
+No external dependencies — pure declarative configuration.
 
 ---
 
-## Licence
+## License
 
 MIT © Serpent Team
