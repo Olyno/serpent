@@ -514,3 +514,20 @@ def formatting(
     ls.logger.debug("Formatting requested: %s", params.text_document.uri)
     doc = ls.workspace.get_text_document(params.text_document.uri)
     return format_document(doc.source, line_length=100)
+
+
+# =============================================================================
+# Semantic tokens (consistent variable coloring across definition and usage)
+# =============================================================================
+
+
+@server.feature(types.TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL)
+def semantic_tokens_full(
+    ls: SerpentLanguageServer, params: types.SemanticTokensParams
+) -> Optional[types.SemanticTokens]:
+    """Provide semantic tokens for consistent coloring (parameters, variables)."""
+    from serpent_lsp.features.semantic_tokens import compute_semantic_tokens
+
+    doc = ls.workspace.get_text_document(params.text_document.uri)
+    module = ls.get_module(doc, workspace_path=ls.workspace.root_path)
+    return compute_semantic_tokens(doc, module)
