@@ -104,19 +104,18 @@
   name: (identifier) @parameter)
 
 ; ===== SPECIAL VARIABLES (self, msg, block, tx) =====
-(special_variable) @variable.builtin
+; These are parsed as plain identifiers — use #eq? to match
+((identifier) @variable.builtin
+  (#eq? @variable.builtin "self"))
 
-(self_variable
-  (identifier) @variable.builtin)
+((identifier) @variable.builtin
+  (#eq? @variable.builtin "msg"))
 
-(msg_variable
-  (identifier) @variable.builtin)
+((identifier) @variable.builtin
+  (#eq? @variable.builtin "block"))
 
-(block_variable
-  (identifier) @variable.builtin)
-
-(tx_variable
-  (identifier) @variable.builtin)
+((identifier) @variable.builtin
+  (#eq? @variable.builtin "tx"))
 
 ; ===== LITERALS =====
 (integer) @number

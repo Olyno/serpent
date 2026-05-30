@@ -35,11 +35,6 @@ module.exports = grammar({
 
   word: $ => $.identifier,
 
-  conflicts: $ => [
-    [$.subscript, $.type_parameterized],
-    [$.attribute, $.dotted_name],
-  ],
-
   rules: {
     // ========== TOP LEVEL ==========
     source_file: $ => seq(
@@ -295,9 +290,9 @@ module.exports = grammar({
 
     // ========== TYPES ==========
     type: $ => choice(
-      $.base_type,
-      $.type_parameterized,
       $.type_bounded,
+      $.type_parameterized,
+      $.base_type,
     ),
 
     base_type: $ => choice(
@@ -320,12 +315,12 @@ module.exports = grammar({
       ']',
     ),
 
-    type_bounded: $ => seq(
-      choice($.base_type, 'String', 'Bytes'),
+    type_bounded: $ => prec(1, seq(
+      $.base_type,
       '[',
       field('bound', $._integer),
       ']',
-    ),
+    )),
 
     // ========== STATEMENTS ==========
     return_statement: $ => seq(
@@ -486,7 +481,6 @@ module.exports = grammar({
       $.parenthesized_expression,
       $.list_expression,
       $.tuple_expression,
-      $.special_variable,
     ),
 
     // ========== LITERALS ==========
@@ -600,35 +594,9 @@ module.exports = grammar({
     ),
 
     // ========== SPECIAL VARIABLES ==========
-    special_variable: $ => choice(
-      $.self_variable,
-      $.msg_variable,
-      $.block_variable,
-      $.tx_variable,
-    ),
-
-    self_variable: $ => prec(PREC.MEMBER, seq(
-      'self',
-      repeat(seq('.', $.identifier)),
-    )),
-
-    msg_variable: $ => prec(PREC.MEMBER, seq(
-      'msg',
-      '.',
-      choice('sender', 'value', 'data', 'gas'),
-    )),
-
-    block_variable: $ => prec(PREC.MEMBER, seq(
-      'block',
-      '.',
-      choice('timestamp', 'number', 'prevhash', 'difficulty', 'coinbase', 'chainid', 'gaslimit', 'basefee', 'prevrandao'),
-    )),
-
-    tx_variable: $ => prec(PREC.MEMBER, seq(
-      'tx',
-      '.',
-      choice('origin', 'gas_price'),
-    )),
+    // self/msg/block/tx are parsed as identifiers, chained via attribute rule.
+    // Highlighting is handled via tree-sitter queries (e.g. ((identifier) @variable.builtin (#eq? @variable.builtin "self"))).
+    // This avoids grammar conflicts between self_variable and the general attribute rule.
 
     // ========== IDENTIFIER ==========
     identifier: $ => /[a-zA-Z_][a-zA-Z0-9_]*/,
