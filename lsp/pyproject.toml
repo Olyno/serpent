@@ -1,0 +1,42 @@
+[project]
+name = "serpent-lsp"
+version = "0.1.0"
+description = "Vyper Language Server Protocol — navigation, diagnostics, completion"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Serpent Team"}
+]
+keywords = ["vyper", "language-server", "lsp"]
+dependencies = [
+    "lsprotocol>=2025.0.0",
+    "pygls>=2.0.0",
+    "uv>=0.9.0",
+    "mamushi>=0.1.0",
+]
+
+[project.scripts]
+serpent-lsp = "serpent_lsp.__main__:main"
+
+[build-system]
+requires = ["uv_build>=0.8.22,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "serpent_lsp"
+module-root = "src"
+
+[dependency-groups]
+dev = [
+    "prek>=0.3.2",
+    "pytest>=9.0.2",
+]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
