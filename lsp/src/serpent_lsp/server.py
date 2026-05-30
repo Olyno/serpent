@@ -1,9 +1,8 @@
 """
-Serveur LSP pour Vyper — SerpentLanguageServer.
+LSP server for Vyper — SerpentLanguageServer.
 
-Implémente le protocole LSP (Language Server Protocol) pour Vyper
-avec pygls ≥ 2.0. Gère les événements de document, la navigation,
-la complétion, le hover et les diagnostics.
+Implements the Language Server Protocol for Vyper using pygls >= 2.0.
+Handles document events, navigation, completion, hover, and diagnostics.
 """
 
 import asyncio
@@ -23,8 +22,8 @@ from serpent_lsp.features.diagnostics import (
     create_diagnostic,
     parse_error_location,
 )
-from serpent_lsp.features.hover import get_hover_info
 from serpent_lsp.features.formatting import format_document
+from serpent_lsp.features.hover import get_hover_info
 from serpent_lsp.features.references import get_all_references
 from serpent_lsp.features.symbols import get_document_symbols
 from serpent_lsp.logger import setup_logging
@@ -32,22 +31,22 @@ from serpent_lsp.parser import Module, parse_module
 
 logger = logging.getLogger("serpent_lsp")
 
-# Délai debounce pour le parsing AST (secondes)
+# Debounce delay for AST parsing (seconds)
 _PARSE_DEBOUNCE_DELAY = 0.3
 
-# Délai debounce pour les diagnostics de compilation (secondes)
+# Debounce delay for compilation diagnostics (seconds)
 _DIAGNOSTICS_DEBOUNCE_DELAY = 1.0
 
 
 class SerpentLanguageServer(LanguageServer):
     """
-    Serveur de langage pour les smart contracts Vyper.
+    Language server for Vyper smart contracts.
 
-    Fournit :
-    - Parsing AST avec debounce pour la navigation
-    - Diagnostics de compilation complète
-    - Go-to-definition, références, symboles
-    - Complétion (self., imports, mots-clés)
+    Provides:
+    - Debounced AST parsing for navigation
+    - Full compilation diagnostics
+    - Go-to-definition, references, symbols
+    - Completion (self., imports, keywords)
     - Hover (documentation)
     """
 
@@ -55,42 +54,41 @@ class SerpentLanguageServer(LanguageServer):
         super().__init__(*args, **kwargs)
         self.modules: Dict[str, Module] = {}
         self.logger = setup_logging(self)
-        self.logger.info("Serpent Language Server — démarrage...")
+        self.logger.info("Serpent Language Server — starting...")
         installed_version = utils.get_installed_vyper_version()
         self.default_version: Optional[str] = (
             str(installed_version) if installed_version else None
         )
-        # Timers debounce pour le parsing AST
+        # Debounce timers for AST parsing
         self._parse_tasks: Dict[str, asyncio.Task] = {}
-        # Timers debounce pour les diagnostics de compilation
+        # Debounce timers for compilation diagnostics
         self._diagnostics_tasks: Dict[str, asyncio.Task] = {}
-        # Boucle d'événements principale
+        # Main event loop
         self._event_loop: Optional[asyncio.AbstractEventLoop] = None
 
     def publish_diagnostics(
         self, uri: str, diagnostics: List[types.Diagnostic]
     ) -> None:
-        """Publie les diagnostics pour un document."""
+        """Publish diagnostics for a document."""
         self.text_document_publish_diagnostics(
             types.PublishDiagnosticsParams(uri=uri, diagnostics=diagnostics)
         )
 
     def clear_diagnostics(self, uri: str) -> None:
-        """Efface tous les diagnostics d'un document."""
+        """Clear all diagnostics for a document."""
         self.publish_diagnostics(uri, [])
 
     def parse(
         self, doc: TextDocument, workspace_path: Optional[str] = None
     ) -> bool:
         """
-        Parse un document et met en cache son module (AST uniquement, rapide).
+        Parse a document and cache its module (AST only, fast).
 
-        Utilisé pour les fonctionnalités de navigation. En cas d'échec,
-        le dernier module valide est conservé pour que la complétion
-        fonctionne même pendant la frappe.
+        Used for navigation features. On failure, the last valid module
+        is preserved so completion still works while typing.
 
         Returns:
-            True si le parsing a réussi, False sinon.
+            True if parsing succeeded, False otherwise.
         """
         try:
             self.modules[doc.uri] = parse_module(
@@ -101,28 +99,28 @@ class SerpentLanguageServer(LanguageServer):
             )
             if not self.default_version:
                 self.default_version = self.modules[doc.uri].version
-            self.logger.debug("Module parsé : %s", doc.uri)
+            self.logger.debug("Module parsed: %s", doc.uri)
             return True
         except ValueError as e:
-            self.logger.warning("Échec parsing %s : %s", doc.uri, e)
+            self.logger.warning("Parse failed for %s: %s", doc.uri, e)
             self._publish_parse_error(doc.uri, str(e), is_version_error=True)
             return False
         except RuntimeError as e:
-            self.logger.warning("Échec parsing AST Vyper %s : %s", doc.uri, e)
+            self.logger.warning("AST parse failed for %s: %s", doc.uri, e)
             self._publish_parse_error(doc.uri, str(e), is_version_error=False)
             return False
         except Exception as e:
-            self.logger.error("Erreur inattendue parsing %s : %s", doc.uri, e)
-            self._publish_parse_error(doc.uri, f"Erreur inattendue : {e}")
+            self.logger.error("Unexpected parse error for %s: %s", doc.uri, e)
+            self._publish_parse_error(doc.uri, f"Unexpected error: {e}")
             return False
 
     def _publish_parse_error(
         self, uri: str, message: str, is_version_error: bool = False
     ) -> None:
-        """Publie un diagnostic pour une erreur de parsing."""
+        """Publish a diagnostic for a parse error."""
         if is_version_error:
             message = (
-                f"{message}. Ajoutez '#pragma version ^0.4.0' en haut du fichier."
+                f"{message}. Add '#pragma version ^0.4.0' at the top of the file."
             )
 
         line, col = parse_error_location(message)
@@ -138,10 +136,9 @@ class SerpentLanguageServer(LanguageServer):
         self, doc: TextDocument, workspace_path: Optional[str] = None
     ) -> None:
         """
-        Planifie les diagnostics de compilation avec debounce.
+        Schedule compilation diagnostics with debounce.
 
-        Exécute le pipeline complet Vyper (plus lent) pour attraper
-        les erreurs de type et sémantiques.
+        Runs the full Vyper pipeline (slower) to catch type and semantic errors.
         """
         uri = doc.uri
 
@@ -163,9 +160,9 @@ class SerpentLanguageServer(LanguageServer):
         self, doc: TextDocument, workspace_path: Optional[str] = None
     ) -> None:
         """
-        Planifie le parsing AST avec debounce.
+        Schedule AST parsing with debounce.
 
-        Exécute l'extraction AST (rapide) pour la navigation.
+        Runs fast AST extraction for navigation.
         """
         uri = doc.uri
 
@@ -185,9 +182,9 @@ class SerpentLanguageServer(LanguageServer):
         self, module: Module, workspace_path: Optional[str] = None
     ) -> None:
         """
-        Planifie le parsing en arrière-plan de tous les imports d'un module.
+        Schedule background parsing of all imports for a module.
 
-        Pré-parse les modules importés pour une complétion/navigation instantanée.
+        Pre-parses imported modules for instant completion/navigation.
         """
         try:
             running_loop = asyncio.get_running_loop()
@@ -207,7 +204,7 @@ class SerpentLanguageServer(LanguageServer):
                 try:
                     await asyncio.sleep(0.1)
                     self.logger.debug(
-                        "Parsing arrière-plan de l'import : %s", import_path
+                        "Background import parsing: %s", import_path
                     )
                     await asyncio.to_thread(
                         self._parse_import, import_uri, import_path, workspace_path
@@ -216,7 +213,7 @@ class SerpentLanguageServer(LanguageServer):
                     pass
                 except Exception as e:
                     self.logger.debug(
-                        "Échec parsing import %s : %s", import_path, e
+                        "Import parse failed for %s: %s", import_path, e
                     )
 
             if not running_loop or not running_loop.is_running():
@@ -249,7 +246,7 @@ class SerpentLanguageServer(LanguageServer):
     def _parse_import(
         self, uri: str, path: str, workspace_path: Optional[str] = None
     ) -> None:
-        """Parse un module importé et le met en cache (sans publier de diagnostics)."""
+        """Parse an imported module and cache it (no diagnostics published)."""
         if uri in self.modules:
             return
 
@@ -260,15 +257,15 @@ class SerpentLanguageServer(LanguageServer):
                 workspace_path=workspace_path,
             )
             self.modules[uri] = module
-            self.logger.debug("Module importé en cache : %s", uri)
+            self.logger.debug("Imported module cached: %s", uri)
             self.schedule_import_parsing(module, workspace_path)
         except Exception as e:
-            self.logger.debug("Import non parsable %s : %s", path, e)
+            self.logger.debug("Unparseable import %s: %s", path, e)
 
     async def _run_full_diagnostics(
         self, doc: TextDocument, workspace_path: Optional[str] = None
     ) -> None:
-        """Exécute la compilation Vyper complète et publie les diagnostics."""
+        """Run full Vyper compilation and publish diagnostics."""
         module = self.modules.get(doc.uri)
         if module is None:
             return
@@ -276,7 +273,7 @@ class SerpentLanguageServer(LanguageServer):
         version = module.version
 
         self.logger.debug(
-            "Diagnostics complets pour %s (vyper %s)", doc.uri, version
+            "Full diagnostics for %s (vyper %s)", doc.uri, version
         )
 
         try:
@@ -289,23 +286,23 @@ class SerpentLanguageServer(LanguageServer):
             )
             self.publish_diagnostics(doc.uri, diagnostics)
             self.logger.debug(
-                "%d diagnostics publiés pour %s", len(diagnostics), doc.uri
+                "%d diagnostics published for %s", len(diagnostics), doc.uri
             )
         except Exception as e:
             self.logger.error(
-                "Échec diagnostics complets pour %s : %s", doc.uri, e
+                "Full diagnostics failed for %s: %s", doc.uri, e
             )
 
     def get_module(
         self, doc: TextDocument, workspace_path: Optional[str] = None
     ) -> Optional[Module]:
         """
-        Obtient ou parse le module pour un document.
+        Get or parse the module for a document.
 
         Returns:
-            Le Module parsé, ou None si le parsing a échoué.
+            The parsed Module, or None if parsing failed.
         """
-        self.logger.debug("Récupération module : %s", doc.uri)
+        self.logger.debug("Getting module: %s", doc.uri)
         if doc.uri not in self.modules:
             success = self.parse(doc, workspace_path)
             if not success:
@@ -313,12 +310,12 @@ class SerpentLanguageServer(LanguageServer):
         return self.modules.get(doc.uri)
 
 
-# Instance du serveur
+# Server instance
 server = SerpentLanguageServer("serpent-lsp", "0.1.0")
 
 
 # =============================================================================
-# Événements de cycle de vie du document
+# Document lifecycle events
 # =============================================================================
 
 
@@ -326,16 +323,16 @@ server = SerpentLanguageServer("serpent-lsp", "0.1.0")
 def did_open(
     ls: SerpentLanguageServer, params: types.DidOpenTextDocumentParams
 ) -> None:
-    """Parse le document à l'ouverture et planifie les diagnostics."""
-    ls.logger.debug("Document ouvert : %s", params.text_document.uri)
+    """Parse document on open and schedule diagnostics."""
+    ls.logger.debug("Document opened: %s", params.text_document.uri)
     doc = ls.workspace.get_text_document(params.text_document.uri)
-    # Parsing AST rapide pour la navigation
+    # Fast AST parsing for navigation
     ls.parse(doc, workspace_path=ls.workspace.root_path)
-    # Parsing arrière-plan des imports
+    # Background import parsing
     module = ls.modules.get(doc.uri)
     if module:
         ls.schedule_import_parsing(module, workspace_path=ls.workspace.root_path)
-    # Diagnostics de compilation (debounced)
+    # Compilation diagnostics (debounced)
     ls.schedule_diagnostics(doc, workspace_path=ls.workspace.root_path)
 
 
@@ -343,12 +340,12 @@ def did_open(
 def did_change(
     ls: SerpentLanguageServer, params: types.DidChangeTextDocumentParams
 ) -> None:
-    """Re-parse le document après modification et planifie les diagnostics."""
-    ls.logger.debug("Document modifié : %s", params.text_document.uri)
+    """Re-parse document after change and schedule diagnostics."""
+    ls.logger.debug("Document changed: %s", params.text_document.uri)
     doc = ls.workspace.get_text_document(params.text_document.uri)
-    # Parsing AST debounced (non-bloquant)
+    # Debounced AST parsing (non-blocking)
     ls.schedule_parse(doc, workspace_path=ls.workspace.root_path)
-    # Diagnostics debounced
+    # Debounced diagnostics
     ls.schedule_diagnostics(doc, workspace_path=ls.workspace.root_path)
 
 
@@ -356,15 +353,15 @@ def did_change(
 def did_save(
     ls: SerpentLanguageServer, params: types.DidSaveTextDocumentParams
 ) -> None:
-    """Re-parse après sauvegarde."""
-    ls.logger.debug("Document sauvegardé : %s", params.text_document.uri)
+    """Re-parse after save."""
+    ls.logger.debug("Document saved: %s", params.text_document.uri)
     doc = ls.workspace.get_text_document(params.text_document.uri)
     ls.parse(doc, workspace_path=ls.workspace.root_path)
     ls.schedule_diagnostics(doc, workspace_path=ls.workspace.root_path)
 
 
 # =============================================================================
-# Fonctionnalités de symboles
+# Symbol features
 # =============================================================================
 
 
@@ -372,8 +369,8 @@ def did_save(
 def document_symbol(
     ls: SerpentLanguageServer, params: types.DocumentSymbolParams
 ) -> List[types.DocumentSymbol]:
-    """Retourne tous les symboles définis dans le document."""
-    ls.logger.debug("Symboles demandés : %s", params.text_document.uri)
+    """Return all symbols defined in the document."""
+    ls.logger.debug("Symbols requested: %s", params.text_document.uri)
     doc = ls.workspace.get_text_document(params.text_document.uri)
     module = ls.get_module(doc, workspace_path=ls.workspace.root_path)
     if module is None:
@@ -385,13 +382,13 @@ def document_symbol(
 def workspace_symbol(
     ls: SerpentLanguageServer, params: types.WorkspaceSymbolParams
 ) -> List[types.WorkspaceSymbol]:
-    """Retourne les symboles correspondant à la requête dans le workspace."""
-    # TODO: Implémenter la recherche de symboles dans le workspace
+    """Return symbols matching the query across the workspace."""
+    # TODO: Implement workspace-wide symbol search
     return []
 
 
 # =============================================================================
-# Fonctionnalités de complétion
+# Completion features
 # =============================================================================
 
 
@@ -403,16 +400,16 @@ def completion(
     ls: SerpentLanguageServer, params: types.CompletionParams
 ) -> List[types.CompletionItem]:
     """
-    Fournit des suggestions de complétion.
+    Provide completion suggestions.
 
-    Supporte :
-    - `self.` — variables d'état et fonctions internes
-    - `<module>.` — symboles des modules importés
-    - Mots-clés et builtins Vyper
+    Supports:
+    - `self.` — state variables and internal functions
+    - `<module>.` — symbols from imported modules
+    - Vyper keywords and builtins
 
-    Utilise le module en cache pour une complétion instantanée.
+    Uses cached module for instant completion.
     """
-    ls.logger.debug("Complétion demandée : %s", params.text_document.uri)
+    ls.logger.debug("Completion requested: %s", params.text_document.uri)
     doc = ls.workspace.get_text_document(params.text_document.uri)
 
     module = ls.modules.get(doc.uri)
@@ -428,7 +425,7 @@ def completion(
 
 
 # =============================================================================
-# Fonctionnalités de navigation
+# Navigation features
 # =============================================================================
 
 
@@ -436,8 +433,8 @@ def completion(
 def goto_definition(
     ls: SerpentLanguageServer, params: types.DefinitionParams
 ) -> Optional[types.Location]:
-    """Va à la définition du symbole sous le curseur."""
-    ls.logger.debug("Définition demandée : %s", params.text_document.uri)
+    """Go to the definition of the symbol under the cursor."""
+    ls.logger.debug("Definition requested: %s", params.text_document.uri)
     doc = ls.workspace.get_text_document(params.text_document.uri)
     module = ls.get_module(doc, workspace_path=ls.workspace.root_path)
     if module is None:
@@ -455,8 +452,8 @@ def goto_definition(
 def goto_references(
     ls: SerpentLanguageServer, params: types.ReferenceParams
 ) -> List[types.Location]:
-    """Retourne toutes les références au symbole sous le curseur."""
-    ls.logger.debug("Références demandées : %s", params.text_document.uri)
+    """Return all references to the symbol under the cursor."""
+    ls.logger.debug("References requested: %s", params.text_document.uri)
     doc = ls.workspace.get_text_document(params.text_document.uri)
     module = ls.get_module(doc, workspace_path=ls.workspace.root_path)
     if module is None:
@@ -481,7 +478,7 @@ def goto_references(
 
 
 # =============================================================================
-# Fonctionnalité Hover
+# Hover feature
 # =============================================================================
 
 
@@ -489,8 +486,8 @@ def goto_references(
 def hover(
     ls: SerpentLanguageServer, params: types.HoverParams
 ) -> Optional[types.Hover]:
-    """Affiche les informations au survol du symbole sous le curseur."""
-    ls.logger.debug("Hover demandé : %s", params.text_document.uri)
+    """Show information on hover over the symbol under the cursor."""
+    ls.logger.debug("Hover requested: %s", params.text_document.uri)
     doc = ls.workspace.get_text_document(params.text_document.uri)
     module = ls.get_module(doc, workspace_path=ls.workspace.root_path)
     if module is None:
@@ -505,7 +502,7 @@ def hover(
 
 
 # =============================================================================
-# Fonctionnalité Formatage
+# Formatting feature
 # =============================================================================
 
 
@@ -513,7 +510,7 @@ def hover(
 def formatting(
     ls: SerpentLanguageServer, params: types.DocumentFormattingParams
 ) -> List[types.TextEdit]:
-    """Formate le document Vyper avec mamushi."""
-    ls.logger.debug("Formatage demandé : %s", params.text_document.uri)
+    """Format the Vyper document with mamushi."""
+    ls.logger.debug("Formatting requested: %s", params.text_document.uri)
     doc = ls.workspace.get_text_document(params.text_document.uri)
     return format_document(doc.source, line_length=100)
