@@ -1,0 +1,157 @@
+{
+    "name": "serpent-vscode",
+    "displayName": "Serpent - Vyper Language Support",
+    "description": "Support du langage Vyper pour Visual Studio Code — LSP, snippets, coloration syntaxique, compilation",
+    "version": "0.1.0",
+    "license": "MIT",
+    "publisher": "serpent",
+    "icon": "images/icon.png",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/nousresearch/serpent"
+    },
+    "bugs": {
+        "url": "https://github.com/nousresearch/serpent/issues"
+    },
+    "engines": {
+        "vscode": "^1.87.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Snippets",
+        "Linters"
+    ],
+    "keywords": [
+        "vyper",
+        "ethereum",
+        "blockchain",
+        "compiler",
+        "security",
+        "smart-contract"
+    ],
+    "type": "module",
+    "activationEvents": [
+        "onLanguage:vyper"
+    ],
+    "main": "./dist/extension.js",
+    "browser": "./dist/web/extension.js",
+    "contributes": {
+        "languages": [
+            {
+                "id": "vyper",
+                "aliases": [
+                    "Vyper",
+                    "vyper"
+                ],
+                "extensions": [
+                    ".vy",
+                    ".vyi"
+                ],
+                "configuration": "./language-configuration.json",
+                "icon": {
+                    "light": "images/icon.png",
+                    "dark": "images/icon.png"
+                }
+            }
+        ],
+        "grammars": [
+            {
+                "language": "vyper",
+                "scopeName": "source.vyper",
+                "path": "./syntaxes/vyper.tmLanguage.json"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "vyper",
+                "path": "./snippets/expr_builtins.json"
+            },
+            {
+                "language": "vyper",
+                "path": "./snippets/stmt_builtins.json"
+            },
+            {
+                "language": "vyper",
+                "path": "./snippets/expressions.json"
+            },
+            {
+                "language": "vyper",
+                "path": "./snippets/statements.json"
+            },
+            {
+                "language": "vyper",
+                "path": "./snippets/module.json"
+            },
+            {
+                "language": "vyper",
+                "path": "./snippets/other.json"
+            },
+            {
+                "language": "vyper",
+                "path": "./snippets/types.json"
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Serpent — Vyper",
+            "properties": {
+                "serpent.lsp.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Activer/désactiver le Language Server Protocol (complétion, diagnostics, navigation)."
+                },
+                "serpent.compile.onSave": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Compiler automatiquement le contrat à la sauvegarde."
+                },
+                "serpent.compile.command": {
+                    "type": "string",
+                    "default": "vyper",
+                    "description": "Commande shell pour invoquer le compilateur Vyper (ex: 'vyper', 'python -m vyper')."
+                },
+                "serpent.python.interpreter": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [],
+                    "description": "Chemin vers l'interpréteur Python à utiliser. Laissez vide pour la détection automatique.",
+                    "scope": "machine"
+                }
+            }
+        },
+        "commands": [
+            {
+                "command": "serpent.compile",
+                "title": "Serpent: Compiler le contrat Vyper",
+                "category": "Serpent"
+            },
+            {
+                "command": "serpent.restartLsp",
+                "title": "Serpent: Redémarrer le serveur LSP",
+                "category": "Serpent"
+            }
+        ]
+    },
+    "scripts": {
+        "compile": "node esbuild.config.mjs",
+        "watch": "node esbuild.config.mjs --watch",
+        "lint": "biome lint src/",
+        "format": "biome format --write src/",
+        "check": "biome check src/",
+        "package": "vsce package",
+        "test": "echo 'Tests à implémenter'"
+    },
+    "dependencies": {
+        "vscode-languageclient": "^9.0.1"
+    },
+    "devDependencies": {
+        "@types/node": "^25.9.1",
+        "@types/vscode": "1.87.0",
+        "@vscode/test-electron": "^2.4.1",
+        "@vscode/test-web": "^0.0.62",
+        "esbuild": "^0.24.0",
+        "typescript": "^5.6.0"
+    }
+}

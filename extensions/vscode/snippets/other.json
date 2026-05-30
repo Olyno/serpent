@@ -1,0 +1,10 @@
+{
+    "natspec sample": {
+        "prefix": "natspec sample",
+        "body": "\"\"\"\n@author <author>\n@notice <description>\n@dev <developer notes>\n@param <param_name description>\n@return <return_description>\n\"\"\"\n"
+    },
+    "natspec": {
+        "prefix": "natspec",
+        "body": "\"\"\"\n@author ${1:author}\n@notice ${2:notice}\n@dev ${3:dev}\n@param ${4:param}\n@return ${5:return}\n\"\"\"\n"
+    }
+}

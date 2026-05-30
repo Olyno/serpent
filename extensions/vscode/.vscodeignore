@@ -1,0 +1,10 @@
+src/**
+node_modules/**
+dist/**
+.gitignore
+*.vsix
+biome.json
+tsconfig.json
+esbuild.config.mjs
+.vscode/**
+test/**
