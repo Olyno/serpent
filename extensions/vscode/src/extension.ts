@@ -1,11 +1,13 @@
 /**
- * Point d'entrée principal de l'extension Serpent VSCode (desktop).
+ * Main entry point for the Serpent VSCode extension (desktop).
  *
- * Activé sur onLanguage:vyper.
- * Initialise le client LSP et enregistre les commandes.
+ * Activated on onLanguage:vyper.
+ * Initializes the LSP client and registers commands.
  */
 
+import { execFile } from 'node:child_process';
 import { type ExtensionContext, window, workspace } from 'vscode';
+import type { LanguageClient } from 'vscode-languageclient/node';
 import {
     COMMAND_COMPILE,
     COMMAND_INSTALL_FORMATTER,
@@ -18,22 +20,20 @@ import { startLspClient, stopLspClient } from './common/server.js';
 import { checkIfConfigurationChanged, getExtensionSettings } from './common/settings.js';
 import { isCompilableVyperFile } from './common/utilities.js';
 import { registerCommand } from './common/vscodeapi.js';
-import type { LanguageClient } from 'vscode-languageclient/node';
-import { execFile } from 'node:child_process';
 
-/** Instance du client LSP */
+/** LSP client instance */
 let lspClient: LanguageClient | undefined;
 
 /**
- * Fonction d'activation appelée par VSCode.
+ * Activation function called by VSCode.
  */
 export async function activate(context: ExtensionContext): Promise<void> {
-    // Canal de sortie pour les logs
+    // Output channel for logs
     const outputChannel = createLogger(LSP_SERVER_NAME);
     context.subscriptions.push(outputChannel);
-    logInfo('Extension Serpent activée');
+    logInfo('Serpent extension activated');
 
-    // Démarrage du LSP si activé dans les paramètres
+    // Start LSP if enabled in settings
     const settings = getExtensionSettings();
     if (settings.lspEnabled) {
         lspClient = await startLspClient(outputChannel);
@@ -42,14 +42,14 @@ export async function activate(context: ExtensionContext): Promise<void> {
         }
     }
 
-    // Enregistrement des commandes
+    // Register commands
     context.subscriptions.push(
         registerCommand(COMMAND_COMPILE, executeCompileCommand),
         registerCommand(COMMAND_RESTART_LSP, () => restartLspServer(outputChannel)),
         registerCommand(COMMAND_INSTALL_FORMATTER, installFormatter),
     );
 
-    // Événement : compilation à la sauvegarde
+    // Event: compile on save
     context.subscriptions.push(
         workspace.onDidSaveTextDocument(async (document) => {
             if (document.languageId !== LANGUAGE_ID) {
@@ -62,7 +62,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
         }),
     );
 
-    // Événement : rechargement de la configuration
+    // Event: configuration change
     context.subscriptions.push(
         workspace.onDidChangeConfiguration(async (event) => {
             if (checkIfConfigurationChanged(event)) {
@@ -77,123 +77,109 @@ export async function activate(context: ExtensionContext): Promise<void> {
         }),
     );
 
-    logInfo('Extension prête');
+    logInfo('Extension ready');
 }
 
 /**
- * Fonction de désactivation appelée par VSCode.
+ * Deactivation function called by VSCode.
  */
 export async function deactivate(): Promise<void> {
-    logInfo('Désactivation de l\'extension...');
+    logInfo('Deactivating extension...');
     await stopLspClient(lspClient);
     lspClient = undefined;
 }
 
 /**
- * Commande : compile le contrat Vyper actif.
+ * Command: compile the active Vyper contract.
  */
 async function executeCompileCommand(): Promise<void> {
     const editor = window.activeTextEditor;
     if (!editor) {
-        window.showWarningMessage('Aucun fichier ouvert.');
+        window.showWarningMessage('No file is open.');
         return;
     }
     if (editor.document.languageId !== LANGUAGE_ID) {
-        window.showWarningMessage('Le fichier actif n\'est pas un contrat Vyper.');
+        window.showWarningMessage('The active file is not a Vyper contract.');
         return;
     }
     if (!isCompilableVyperFile(editor.document.fileName)) {
-        window.showWarningMessage('Les fichiers .vyi (interfaces) ne sont pas compilables.');
+        window.showWarningMessage('.vyi files (interfaces) cannot be compiled.');
         return;
     }
     await compileContract(editor.document.fileName);
 }
 
 /**
- * Compile un contrat Vyper via la commande shell configurée.
- * Affiche les résultats dans l'OutputChannel.
+ * Compile a Vyper contract via the configured shell command.
+ * Shows results in the OutputChannel.
  */
 async function compileContract(filePath: string): Promise<void> {
     const settings = getExtensionSettings();
     const compileCommand = settings.compileCommand;
     const commandParts = compileCommand.split(/\s+/);
 
-    logInfo(`Compilation de ${filePath} avec la commande : ${compileCommand}`);
+    logInfo(`Compiling ${filePath} with command: ${compileCommand}`);
 
     return new Promise((resolveResult) => {
-        execFile(
-            commandParts[0],
-            [...commandParts.slice(1), filePath],
-            { timeout: 30000 },
-            (error, stdout, stderr) => {
-                if (error) {
-                    const errorMessage = stderr || error.message;
-                    logError(`Échec de compilation : ${errorMessage}`);
-                    window.showErrorMessage(`Compilation échouée : ${errorMessage.split('\n')[0]}`);
-                } else {
-                    logInfo(`Compilation réussie : ${stdout.trim() || 'OK'}`);
-                    window.showInformationMessage('Compilation Vyper réussie');
-                }
-                resolveResult();
-            },
-        );
+        execFile(commandParts[0], [...commandParts.slice(1), filePath], { timeout: 30000 }, (error, stdout, stderr) => {
+            if (error) {
+                const errorMessage = stderr || error.message;
+                logError(`Compilation failed: ${errorMessage}`);
+                window.showErrorMessage(`Compilation failed: ${errorMessage.split('\n')[0]}`);
+            } else {
+                logInfo(`Compilation succeeded: ${stdout.trim() || 'OK'}`);
+                window.showInformationMessage('Vyper compilation successful');
+            }
+            resolveResult();
+        });
     });
 }
 
 /**
- * Redémarre le serveur LSP.
+ * Restart the LSP server.
  */
 async function restartLspServer(outputChannel: ReturnType<typeof createLogger>): Promise<void> {
-    logInfo('Redémarrage du serveur LSP...');
+    logInfo('Restarting LSP server...');
     await stopLspClient(lspClient);
     lspClient = await startLspClient(outputChannel);
     if (lspClient) {
-        window.showInformationMessage('Serveur LSP redémarré');
+        window.showInformationMessage('LSP server restarted');
     } else {
-        window.showErrorMessage('Échec du redémarrage du serveur LSP');
+        window.showErrorMessage('Failed to restart LSP server');
     }
 }
 
 /**
- * Installe le formatter mamushi via uv ou pip.
- * Propose une installation en un clic si mamushi n'est pas disponible.
+ * Install the mamushi formatter via uv or pip.
+ * Offers one-click install if mamushi is not available.
  */
 async function installFormatter(): Promise<void> {
     const choice = await window.showInformationMessage(
-        'mamushi (formatter Vyper) n\\'est pas installé. L\\'installer maintenant ?',
+        'mamushi (Vyper formatter) is not installed. Install it now?',
         { modal: false },
-        'Installer avec uv',
-        'Installer avec pip',
+        'Install with uv',
+        'Install with pip',
     );
 
     if (!choice) {
         return;
     }
 
-    const installCmd = choice === 'Installer avec uv'
-        ? { command: 'uv', args: ['pip', 'install', 'mamushi'] }
-        : { command: 'python3', args: ['-m', 'pip', 'install', 'mamushi'] };
+    const installCmd =
+        choice === 'Install with uv'
+            ? { command: 'uv', args: ['pip', 'install', 'mamushi'] }
+            : { command: 'python3', args: ['-m', 'pip', 'install', 'mamushi'] };
 
-    logInfo(`Installation de mamushi via ${installCmd.command}...`);
-    window.showInformationMessage(`Installation de mamushi en cours via ${installCmd.command}...`);
+    logInfo(`Installing mamushi via ${installCmd.command}...`);
+    window.showInformationMessage(`Installing mamushi via ${installCmd.command}...`);
 
-    execFile(
-        installCmd.command,
-        installCmd.args,
-        { timeout: 60000 },
-        (error, _stdout, stderr) => {
-            if (error) {
-                logError(`Échec d\\'installation de mamushi : ${stderr || error.message}`);
-                window.showErrorMessage(
-                    `Échec d\\'installation de mamushi. Installez-le manuellement : ` +
-                    `pip install mamushi`,
-                );
-            } else {
-                logInfo('mamushi installé avec succès');
-                window.showInformationMessage(
-                    'mamushi installé ! Le formatage Vyper est maintenant disponible (Shift+Alt+F).',
-                );
-            }
-        },
-    );
+    execFile(installCmd.command, installCmd.args, { timeout: 60000 }, (error, _stdout, stderr) => {
+        if (error) {
+            logError(`Failed to install mamushi: ${stderr || error.message}`);
+            window.showErrorMessage('Failed to install mamushi. Install it manually: pip install mamushi');
+        } else {
+            logInfo('mamushi installed successfully');
+            window.showInformationMessage('mamushi installed! Vyper formatting is now available (Shift+Alt+F).');
+        }
+    });
 }
