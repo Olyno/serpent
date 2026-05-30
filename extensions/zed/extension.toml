@@ -1,0 +1,16 @@
+id = "serpent-vyper"
+name = "Serpent - Vyper Language Support"
+version = "0.1.0"
+schema_version = 1
+authors = ["Serpent Team"]
+description = "Vyper language support for Zed"
+repository = "https://github.com/serpent-lang/serpent"
+
+[grammars.vyper]
+repository = "https://github.com/serpent-lang/tree-sitter-vyper"
+
+[language_servers.vyper]
+name = "Serpent LSP"
+language = "Vyper"
+command = "uv"
+args = ["run", "-m", "serpent_lsp"]

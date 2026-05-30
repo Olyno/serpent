@@ -1,0 +1,5 @@
+name = "Vyper"
+grammar = "vyper"
+path_suffixes = ["vy", "vyi"]
+line_comments = ["# "]
+tab_size = 4
