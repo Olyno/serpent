@@ -1,55 +1,35 @@
 ; Tree-sitter highlight queries for Vyper
-; Captures: @keyword, @type, @function, @string, @comment, @variable, @constant,
-;           @operator, @punctuation, @attribute, @number, @boolean, @parameter,
-;           @namespace, @constructor, @variable.builtin, @function.builtin
+; Uses named node captures only (anonymous token matching is unreliable across tree-sitter versions)
 
-; ===== KEYWORDS =====
+; ===== COMMENTS =====
+(comment) @comment
+
+; ===== KEYWORDS (via named statement nodes) =====
+(import_statement) @keyword.import
+(from_import) @keyword.import
+
 [
-  "def"
-  "return"
-  "raise"
-  "assert"
-  "if"
-  "elif"
-  "else"
-  "for"
-  "in"
-  "pass"
-  "break"
-  "continue"
-  "not"
-  "and"
-  "or"
+  (return_statement)
+  (raise_statement)
+  (assert_statement)
+  (pass_statement)
+  (break_statement)
+  (continue_statement)
+  (if_statement)
+  (for_statement)
 ] @keyword
-
-; ===== MODULE KEYWORDS (import system) =====
-[
-  "import"
-  "from"
-  "uses"
-  "implements"
-  "initializes"
-  "exports"
-] @keyword.import
 
 ; ===== TYPE DEFINITION KEYWORDS =====
 [
-  "struct"
-  "enum"
-  "flag"
-  "event"
-  "interface"
-  "constant"
-  "indexed"
+  (struct_def)
+  (enum_def)
+  (flag_def)
+  (event_def)
+  (interface_def)
 ] @keyword.type
 
 ; ===== DECORATORS =====
 (decorator) @attribute
-
-; ===== BUILTIN FUNCTIONS =====
-((identifier) @function.builtin
-  (#match? @function.builtin
-    "^(send|raw_call|raw_log|raw_revert|keccak256|sha256|create_from_blueprint|create_copy_of|create_minimal_proxy_to|convert|slice|concat|empty|as_wei_value|as_unitless_number|ceil|floor|max|min|max_value|min_value|pow_mod256|sqrt|isqrt|epsilon|extract32|unsafe_add|unsafe_sub|unsafe_mul|unsafe_div|abi_decode|abi_encode|_abi_encode|method_id|print|log|clear|pop|append|len|range)$"))
 
 ; ===== FUNCTION DEFINITIONS =====
 (function_def
@@ -71,40 +51,29 @@
   function: (attribute
     attribute: (identifier) @function.call))
 
-; ===== TYPES (base types like uint256, bool, etc.) =====
+; ===== TYPES =====
 (base_type) @type
 
-; ===== PARAMETERIZED TYPES (DynArray, HashMap) =====
-(type_parameterized
-  [
-    "DynArray"
-    "HashMap"
-  ] @type)
+(type_parameterized) @type
 
-; ===== BOUNDED TYPES (String[32], Bytes[64]) =====
-(type_bounded
-  [
-    "String"
-    "Bytes"
-  ] @type)
+(type_bounded) @type
 
-; ===== VARIABLE DEFINITIONS =====
+; ===== VARIABLES =====
 (variable_def
   name: (identifier) @variable)
 
 (variable_def
   name: (attribute) @variable)
 
-; ===== CONSTANT DEFINITIONS =====
+; ===== CONSTANTS =====
 (constant_def
   name: (identifier) @constant)
 
-; ===== FUNCTION PARAMETERS =====
+; ===== PARAMETERS =====
 (parameter
   name: (identifier) @parameter)
 
 ; ===== SPECIAL VARIABLES (self, msg, block, tx) =====
-; These are parsed as plain identifiers — use #eq? to match
 ((identifier) @variable.builtin
   (#eq? @variable.builtin "self"))
 
@@ -119,8 +88,7 @@
 
 ; ===== LITERALS =====
 (integer) @number
-
-(float) @number.float
+(float) @number
 
 (string) @string
 
@@ -128,89 +96,18 @@
 
 (none) @constant.builtin
 
-; ===== COMMENTS =====
-(comment) @comment
-
-; ===== OPERATORS =====
-[
-  "+"
-  "-"
-  "*"
-  "/"
-  "%"
-  "**"
-  "="
-  "+="
-  "-="
-  "*="
-  "/="
-  "%="
-  "**="
-  "&="
-  "|="
-  "^="
-  "<<="
-  ">>="
-  "=="
-  "!="
-  "<"
-  "<="
-  ">"
-  ">="
-  "&"
-  "|"
-  "^"
-  "~"
-  "<<"
-  ">>"
-  "->"
-] @operator
+; ===== ATTRIBUTE ACCESS =====
+(attribute
+  attribute: (identifier) @variable.member)
 
 ; ===== PUNCTUATION =====
 [
+  "."
+  ","
+  ":"
   "("
   ")"
   "["
   "]"
-  ","
-  ":"
-  "."
-  "@"
+  "="
 ] @punctuation
-
-; ===== ATTRIBUTE ACCESS (obj.attr) =====
-(attribute
-  attribute: (identifier) @attribute)
-
-; ===== STRUCT/EVENT/INTERFACE/ENUM/FLAG NAMES =====
-(struct_def
-  name: (identifier) @type)
-
-(enum_def
-  name: (identifier) @type)
-
-(flag_def
-  name: (identifier) @type)
-
-(event_def
-  name: (identifier) @type)
-
-(interface_def
-  name: (identifier) @type)
-
-; ===== STRUCT/EVENT FIELDS =====
-(struct_field
-  name: (identifier) @variable.member)
-
-(event_field
-  name: (identifier) @variable.member)
-
-; ===== IMPORT NAMES =====
-(import_statement
-  name: (dotted_name) @namespace)
-
-(from_import
-  module: (dotted_name) @namespace)
-
-(from_import
-  name: (dotted_name) @namespace)

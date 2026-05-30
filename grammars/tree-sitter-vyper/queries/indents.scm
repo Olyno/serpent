@@ -14,9 +14,9 @@
 
 ; Dedent for standalone keywords that end blocks
 [
-  "pass"
-  "break"
-  "continue"
+  (pass_statement)
+  (break_statement)
+  (continue_statement)
 ] @indent_end
 
 ; Dedent after return/raise in block context
