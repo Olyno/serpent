@@ -1,10 +1,9 @@
 /**
- * Gestion des paramètres de configuration de l'extension.
- * Accès typé aux settings via workspace.getConfiguration('serpent').
+ * Extension configuration management.
+ * Typed access to settings via workspace.getConfiguration('serpent').
  */
 
-import { type ConfigurationScope, type WorkspaceConfiguration } from 'vscode';
-import { getConfiguration } from './vscodeapi.js';
+import type { ConfigurationScope, WorkspaceConfiguration } from 'vscode';
 import {
     CONFIG_COMPILE_COMMAND,
     CONFIG_COMPILE_ON_SAVE,
@@ -12,22 +11,21 @@ import {
     CONFIG_PYTHON_INTERPRETER,
     EXTENSION_NAMESPACE,
 } from './constants.js';
+import { getConfiguration } from './vscodeapi.js';
 
-/** Interface typée pour les paramètres de l'extension */
+/** Typed interface for extension settings */
 export interface ExtensionSettings {
-    /** Activation du serveur LSP */
+    /** Whether the LSP server is enabled */
     lspEnabled: boolean;
-    /** Compiler automatiquement à la sauvegarde */
+    /** Compile automatically on save */
     compileOnSave: boolean;
-    /** Commande shell pour lancer vyper */
+    /** Shell command to invoke vyper */
     compileCommand: string;
-    /** Chemin vers l'interpréteur Python (tableau pour compatibilité) */
+    /** Path to Python interpreter (array for compatibility) */
     pythonInterpreter: string[];
 }
 
-/**
- * Lit les paramètres de l'extension depuis la configuration VSCode.
- */
+/** Read extension settings from VSCode configuration */
 export function getExtensionSettings(scope?: ConfigurationScope): ExtensionSettings {
     const config = getConfiguration(EXTENSION_NAMESPACE, scope);
     return {
@@ -38,9 +36,7 @@ export function getExtensionSettings(scope?: ConfigurationScope): ExtensionSetti
     };
 }
 
-/**
- * Vérifie si un événement de changement de configuration concerne nos paramètres.
- */
+/** Check if a configuration change event affects our settings */
 export function checkIfConfigurationChanged(event: { affectsConfiguration: (section: string) => boolean }): boolean {
     const monitoredKeys = [
         `${EXTENSION_NAMESPACE}.${CONFIG_LSP_ENABLED}`,
@@ -51,7 +47,7 @@ export function checkIfConfigurationChanged(event: { affectsConfiguration: (sect
     return monitoredKeys.some((key) => event.affectsConfiguration(key));
 }
 
-/** Lecture sécurisée d'une valeur de configuration avec valeur par défaut */
+/** Safe config value read with default fallback */
 function readConfig<T>(config: WorkspaceConfiguration, key: string, defaultValue: T): T {
     return config.get<T>(key) ?? defaultValue;
 }

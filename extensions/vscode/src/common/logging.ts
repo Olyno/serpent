@@ -1,43 +1,43 @@
 /**
- * Journalisation minimaliste pour l'extension.
- * Utilise l'OutputChannel de VSCode pour tracer les événements.
+ * Minimal logging for the extension.
+ * Uses VSCode's OutputChannel for tracing events.
  */
 
 import { type LogOutputChannel, window } from 'vscode';
 
-/** Canal de sortie unique pour toute l'extension */
+/** Single output channel for the entire extension */
 let outputChannel: LogOutputChannel | undefined;
 
 /**
- * Crée et retourne le canal de sortie de l'extension.
- * Appelé une seule fois à l'activation.
+ * Create and return the extension output channel.
+ * Called once at activation.
  */
 export function createLogger(name: string): LogOutputChannel {
     outputChannel = window.createOutputChannel(name, { log: true });
     return outputChannel;
 }
 
-/** Enregistre un message informatif */
+/** Log an info message */
 export function logInfo(message: string, ...args: unknown[]): void {
     outputChannel?.info(formatMessage(message, args));
 }
 
-/** Enregistre un avertissement */
+/** Log a warning */
 export function logWarn(message: string, ...args: unknown[]): void {
     outputChannel?.warn(formatMessage(message, args));
 }
 
-/** Enregistre une erreur */
+/** Log an error */
 export function logError(message: string, ...args: unknown[]): void {
     outputChannel?.error(formatMessage(message, args));
 }
 
-/** Enregistre un message de débogage */
+/** Log a debug message */
 export function logDebug(message: string, ...args: unknown[]): void {
     outputChannel?.debug(formatMessage(message, args));
 }
 
-/** Formate un message avec ses arguments */
+/** Format a message with its arguments */
 function formatMessage(message: string, args: unknown[]): string {
     if (args.length === 0) {
         return message;

@@ -1,39 +1,39 @@
 /**
- * Détection et résolution de l'interpréteur Python.
+ * Python interpreter detection and resolution.
  *
- * Stratégie de fallback :
- *   1. Chemin explicite dans les paramètres (serpent.python.interpreter)
- *   2. Exécutable 'python3' dans le PATH
- *   3. Exécutable 'python' dans le PATH
- *   4. Environnement virtuel local (.venv/bin/python)
+ * Fallback strategy:
+ *   1. Explicit path in settings (serpent.python.interpreter)
+ *   2. 'python3' executable in PATH
+ *   3. 'python' executable in PATH
+ *   4. Local virtual environment (.venv/bin/python)
  */
 
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { type ConfigurationScope } from 'vscode';
+import type { ConfigurationScope } from 'vscode';
 import { getExtensionSettings } from './settings.js';
 import { getProjectRoot } from './utilities.js';
 import { getWorkspaceFolders } from './vscodeapi.js';
 
-/** Résultat de la détection Python */
+/** Python detection result */
 export interface PythonInfo {
-    /** Chemin vers l'exécutable Python */
+    /** Path to the Python executable */
     path: string;
-    /** Version Python (ex: '3.11.5') */
+    /** Python version (e.g. '3.11.5') */
     version: string;
-    /** Dossier de travail recommandé */
+    /** Recommended working directory */
     cwd: string;
 }
 
 /**
- * Détecte l'interpréteur Python disponible.
- * Priorité : paramètre utilisateur → python3 PATH → python PATH → .venv.
+ * Detect an available Python interpreter.
+ * Priority: user setting → python3 PATH → python PATH → .venv.
  */
 export async function detectPython(scope?: ConfigurationScope): Promise<PythonInfo | undefined> {
     const settings = getExtensionSettings(scope);
 
-    // 1. Chemin explicite dans les paramètres
+    // 1. Explicit path in settings
     if (settings.pythonInterpreter.length > 0) {
         const customPath = settings.pythonInterpreter[0];
         const version = await getPythonVersion(customPath);
@@ -42,19 +42,27 @@ export async function detectPython(scope?: ConfigurationScope): Promise<PythonIn
         }
     }
 
-    // 2. python3 dans le PATH
+    // 2. python3 in PATH
     const python3Version = await getPythonVersion('python3');
     if (python3Version) {
-        return { path: 'python3', version: python3Version, cwd: getWorkspaceCwd() };
+        return {
+            path: 'python3',
+            version: python3Version,
+            cwd: getWorkspaceCwd(),
+        };
     }
 
-    // 3. python dans le PATH
+    // 3. python in PATH
     const pythonVersion = await getPythonVersion('python');
     if (pythonVersion) {
-        return { path: 'python', version: pythonVersion, cwd: getWorkspaceCwd() };
+        return {
+            path: 'python',
+            version: pythonVersion,
+            cwd: getWorkspaceCwd(),
+        };
     }
 
-    // 4. .venv local
+    // 4. Local .venv
     const venvPath = findLocalVenv();
     if (venvPath) {
         const version = await getPythonVersion(venvPath);
@@ -66,9 +74,7 @@ export async function detectPython(scope?: ConfigurationScope): Promise<PythonIn
     return undefined;
 }
 
-/**
- * Vérifie si l'interpréteur est au moins en version 3.10 (requis pour Vyper).
- */
+/** Check if the interpreter is at least version 3.10 (required for Vyper) */
 export function isPythonSupported(version: string): boolean {
     const match = /^(\d+)\.(\d+)/.exec(version);
     if (!match) {
@@ -79,9 +85,7 @@ export function isPythonSupported(version: string): boolean {
     return major > 3 || (major === 3 && minor >= 10);
 }
 
-/**
- * Obtient la version de Python via l'exécutable donné.
- */
+/** Get Python version via the given executable */
 async function getPythonVersion(pythonPath: string): Promise<string | undefined> {
     return new Promise((resolveResult) => {
         execFile(pythonPath, ['--version'], { timeout: 5000 }, (error, stdout, stderr) => {
@@ -96,9 +100,7 @@ async function getPythonVersion(pythonPath: string): Promise<string | undefined>
     });
 }
 
-/**
- * Cherche un environnement virtuel local (.venv) dans les dossiers du workspace.
- */
+/** Look for a local virtual environment (.venv) in workspace folders */
 function findLocalVenv(): string | undefined {
     const workspaceFolders = getWorkspaceFolders();
     for (const folder of workspaceFolders) {
@@ -114,7 +116,7 @@ function findLocalVenv(): string | undefined {
     return undefined;
 }
 
-/** Récupère le répertoire de travail du workspace */
+/** Get the workspace working directory */
 function getWorkspaceCwd(): string {
     const root = getProjectRoot();
     return root.uri.fsPath;

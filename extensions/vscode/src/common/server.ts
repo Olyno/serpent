@@ -1,16 +1,17 @@
 /**
- * Client Language Server Protocol (LSP) pour Vyper.
+ * LSP client configuration for Vyper.
  *
- * Configure et gère la connexion entre VSCode et le serveur LSP serpent-lsp.
- * Le serveur Python est lancé via `python -m serpent_lsp` ou `uv run -m serpent_lsp`.
+ * Configures and manages the connection between VSCode and the
+ * serpent-lsp Python server. The server is launched via
+ * `python -m serpent_lsp` or `uv run -m serpent_lsp`.
  */
 
-import { type LogOutputChannel } from 'vscode';
+import type { LogOutputChannel } from 'vscode';
 import {
     LanguageClient,
     type LanguageClientOptions,
-    type ServerOptions,
     RevealOutputChannelOn,
+    type ServerOptions,
     State,
 } from 'vscode-languageclient/node';
 
@@ -19,24 +20,24 @@ import { detectPython, isPythonSupported } from './python.js';
 import { isVirtualWorkspace } from './vscodeapi.js';
 
 /**
- * Crée les options du serveur LSP.
- * Résout l'interpréteur Python et construit la commande de lancement.
+ * Create LSP server options.
+ * Resolves the Python interpreter and builds the launch command.
  */
 async function createServerOptions(): Promise<ServerOptions | undefined> {
     const pythonInfo = await detectPython();
     if (!pythonInfo) {
-        logError('Aucun interpréteur Python détecté. Installez Python 3.10+.');
+        logError('No Python interpreter detected. Install Python 3.10+.');
         return undefined;
     }
     if (!isPythonSupported(pythonInfo.version)) {
-        logError(`Version Python ${pythonInfo.version} non supportée. Minimum requis : 3.10.`);
+        logError(`Python version ${pythonInfo.version} is not supported. Minimum required: 3.10.`);
         return undefined;
     }
 
-    logInfo(`Interpréteur Python détecté : ${pythonInfo.path} (${pythonInfo.version})`);
-    logDebug(`Répertoire de travail : ${pythonInfo.cwd}`);
+    logInfo(`Python interpreter detected: ${pythonInfo.path} (${pythonInfo.version})`);
+    logDebug(`Working directory: ${pythonInfo.cwd}`);
 
-    // Lancement via python -m serpent_lsp
+    // Launch via python -m serpent_lsp
     return {
         command: pythonInfo.path,
         args: ['-m', 'serpent_lsp'],
@@ -48,7 +49,7 @@ async function createServerOptions(): Promise<ServerOptions | undefined> {
 }
 
 /**
- * Crée les options du client LSP.
+ * Create LSP client options.
  */
 function createClientOptions(outputChannel: LogOutputChannel): LanguageClientOptions {
     return {
@@ -65,8 +66,8 @@ function createClientOptions(outputChannel: LogOutputChannel): LanguageClientOpt
 }
 
 /**
- * Démarre le client LSP et le connecte au serveur Python.
- * Retourne le client ou undefined en cas d'échec.
+ * Start the LSP client and connect it to the Python server.
+ * Returns the client or undefined on failure.
  */
 export async function startLspClient(outputChannel: LogOutputChannel): Promise<LanguageClient | undefined> {
     const serverOptions = await createServerOptions();
@@ -77,34 +78,34 @@ export async function startLspClient(outputChannel: LogOutputChannel): Promise<L
     const clientOptions = createClientOptions(outputChannel);
     const client = new LanguageClient('serpent-lsp', 'Serpent LSP', serverOptions, clientOptions);
 
-    // Surveiller les changements d'état
-    client.onDidChangeState((event: { newState: typeof State[keyof typeof State] }) => {
+    // Track state changes
+    client.onDidChangeState((event: { newState: (typeof State)[keyof typeof State] }) => {
         switch (event.newState) {
             case State.Stopped:
-                logInfo('Serveur LSP : arrêté');
+                logInfo('LSP server: stopped');
                 break;
             case State.Starting:
-                logInfo('Serveur LSP : démarrage...');
+                logInfo('LSP server: starting...');
                 break;
             case State.Running:
-                logInfo('Serveur LSP : en cours d\'exécution');
+                logInfo('LSP server: running');
                 break;
         }
     });
 
     try {
-        logInfo('Démarrage du client LSP...');
+        logInfo('Starting LSP client...');
         await client.start();
-        logInfo('Client LSP démarré avec succès');
+        logInfo('LSP client started successfully');
         return client;
     } catch (error) {
-        logError(`Échec du démarrage du client LSP : ${String(error)}`);
+        logError(`Failed to start LSP client: ${String(error)}`);
         return undefined;
     }
 }
 
 /**
- * Arrête proprement le client LSP.
+ * Stop the LSP client gracefully.
  */
 export async function stopLspClient(client: LanguageClient | undefined): Promise<void> {
     if (!client) {
@@ -112,8 +113,8 @@ export async function stopLspClient(client: LanguageClient | undefined): Promise
     }
     try {
         await client.stop();
-        logInfo('Client LSP arrêté');
+        logInfo('LSP client stopped');
     } catch (error) {
-        logError(`Erreur à l'arrêt du client LSP : ${String(error)}`);
+        logError(`Error stopping LSP client: ${String(error)}`);
     }
 }

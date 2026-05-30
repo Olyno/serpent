@@ -1,38 +1,38 @@
 /**
- * Wrappers légers autour des API VSCode pour faciliter l'isolation et les tests.
+ * Lightweight wrappers around VSCode APIs for test isolation.
  */
 
 import {
     type ConfigurationScope,
+    commands,
     type Disposable,
     type Uri,
     type WorkspaceConfiguration,
     type WorkspaceFolder,
-    commands,
     workspace,
 } from 'vscode';
 
-/** Récupère la configuration d'un namespace */
+/** Get configuration for a namespace */
 export function getConfiguration(section: string, scope?: ConfigurationScope): WorkspaceConfiguration {
     return workspace.getConfiguration(section, scope);
 }
 
-/** Enregistre une commande VSCode */
+/** Register a VSCode command */
 export function registerCommand(command: string, callback: (...args: unknown[]) => unknown): Disposable {
     return commands.registerCommand(command, callback);
 }
 
-/** Retourne les dossiers du workspace */
+/** Get workspace folders */
 export function getWorkspaceFolders(): readonly WorkspaceFolder[] {
     return workspace.workspaceFolders ?? [];
 }
 
-/** Retourne le dossier workspace pour un URI donné */
+/** Get the workspace folder for a given URI */
 export function getWorkspaceFolder(uri: Uri): WorkspaceFolder | undefined {
     return workspace.getWorkspaceFolder(uri);
 }
 
-/** Détecte si le workspace est virtuel (pas de fichiers locaux) */
+/** Detect if workspace is virtual (no local files) */
 export function isVirtualWorkspace(): boolean {
     const folders = workspace.workspaceFolders;
     if (!folders) {
@@ -41,5 +41,5 @@ export function isVirtualWorkspace(): boolean {
     return folders.every((folder) => folder.uri.scheme !== 'file');
 }
 
-/** Événement déclenché au changement de configuration */
+/** Configuration change event */
 export const { onDidChangeConfiguration } = workspace;

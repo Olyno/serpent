@@ -1,13 +1,13 @@
 /**
- * Utilitaires génériques pour l'extension.
+ * General utilities for the extension.
  */
 
-import { type WorkspaceFolder, Uri } from 'vscode';
+import { Uri, type WorkspaceFolder } from 'vscode';
 import { getWorkspaceFolders } from './vscodeapi.js';
 
 /**
- * Résout le dossier racine du projet.
- * Priorité : dossier le plus court (le plus proche de la racine).
+ * Resolve the project root folder.
+ * Priority: shortest path (closest to filesystem root).
  */
 export function getProjectRoot(): WorkspaceFolder {
     const workspaceFolders = getWorkspaceFolders();
@@ -18,23 +18,19 @@ export function getProjectRoot(): WorkspaceFolder {
             index: 0,
         };
     }
-    // Retourne le dossier le plus court (racine logique)
+    // Return the shortest folder path (logical root)
     return workspaceFolders.reduce((shortest, current) =>
         current.uri.fsPath.length < shortest.uri.fsPath.length ? current : shortest,
     );
 }
 
-/**
- * Vérifie si un fichier est un fichier Vyper (extension .vy ou .vyi).
- */
+/** Check if a file is a Vyper file (.vy or .vyi extension) */
 export function isVyperFile(fileName: string): boolean {
     const lower = fileName.toLowerCase();
     return lower.endsWith('.vy') || lower.endsWith('.vyi');
 }
 
-/**
- * Vérifie si un fichier est un contrat compilable (.vy, pas .vyi).
- */
+/** Check if a file is a compilable contract (.vy, not .vyi) */
 export function isCompilableVyperFile(fileName: string): boolean {
     return fileName.toLowerCase().endsWith('.vy');
 }
