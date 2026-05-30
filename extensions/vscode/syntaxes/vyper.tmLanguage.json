@@ -16,6 +16,18 @@
         },
         {
             "include": "#reserved-names-vyper"
+        },
+        {
+            "include": "#vyper-keywords-type"
+        },
+        {
+            "include": "#vyper-keywords-modifier"
+        },
+        {
+            "include": "#vyper-keywords-constants"
+        },
+        {
+            "include": "#vyper-keywords-units"
         }
     ],
     "repository": {
@@ -4306,8 +4318,24 @@
             ]
         },
         "reserved-names-vyper": {
-            "name": "name.reserved.vyper",
-            "match": "(?x)\n  \\b (max_int128 | min_int128 | nonlocal | babbage | _default_ | ___init___ | await | indexed | ____init____ | true | constant | with | from | nonpayable | finally | enum | zero_wei | del | for | ____default____ | if | none | or | global | def | not | class | twei | struct | mwei | empty_bytes32 | nonreentrant | transient | false | assert | event | pass | finney | init | lovelace | min_decimal | shannon | public | external | internal | flagunreachable | _init_ | return | in | and | raise | try | gwei | break | zero_address | pwei | range | wei | while | ada | yield | as | immutable | continue | async | lambda | default | is | szabo | kwei | import | max_uint256 | elif | ___default___ | else | except | max_decimal | interface | payable | ether) \\b\n"
+            "name": "keyword.control.vyper",
+            "match": "(?x)\\n  \\\\b (def | if | elif | else | for | return | raise | assert | pass | break | continue | import | from | as | in | and | or | not | range) \\\\b\\n"
+        },
+        "vyper-keywords-type": {
+            "name": "keyword.type.vyper",
+            "match": "(?x)\\n  \\\\b (struct | enum | flag | event | interface) \\\\b\\n"
+        },
+        "vyper-keywords-modifier": {
+            "name": "storage.modifier.vyper",
+            "match": "(?x)\\n  \\\\b (public | constant | immutable | indexed | nonpayable | nonreentrant | transient | payable | external | internal) \\\\b\\n"
+        },
+        "vyper-keywords-constants": {
+            "name": "constant.language.vyper",
+            "match": "(?x)\\n  \\\\b (True | False | None | max_int128 | min_int128 | max_uint256 | max_decimal | min_decimal | zero_address | empty_bytes32 | zero_wei) \\\\b\\n"
+        },
+        "vyper-keywords-units": {
+            "name": "constant.numeric.vyper",
+            "match": "(?x)\\n  \\\\b (wei | kwei | babbage | shannon | finney | szabo | gwei | ada | lovelace | mwei | twei | pwei | ether) \\\\b\\n"
         }
     }
 }
