@@ -1,8 +1,8 @@
 /**
- * Point d'entrée de l'extension Serpent VSCode (web — vscode.dev).
+ * Entry point for the Serpent VSCode extension (web — vscode.dev).
  *
- * Version allégée : pas de compilation (pas d'accès shell), pas de LSP natif.
- * Fournit uniquement la coloration syntaxique, les snippets, et le support de langage.
+ * Lightweight version: no compilation (no shell access), no native LSP.
+ * Provides syntax highlighting, snippets, and language support only.
  */
 
 import { type ExtensionContext, window } from 'vscode';
@@ -11,29 +11,29 @@ import { createLogger, logInfo } from './common/logging.js';
 import { registerCommand } from './common/vscodeapi.js';
 
 /**
- * Activation de l'extension web.
- * Pas de LSP, pas de compilation shell.
+ * Web extension activation.
+ * No LSP, no shell compilation.
  */
 export function activate(context: ExtensionContext): void {
     const outputChannel = createLogger(LSP_SERVER_NAME);
     context.subscriptions.push(outputChannel);
-    logInfo(`Extension ${EXTENSION_NAMESPACE} activée (web)`);
+    logInfo(`Extension ${EXTENSION_NAMESPACE} activated (web)`);
 
-    // Enregistrement de la commande compile (avertissement uniquement)
+    // Register compile command (warning only)
     context.subscriptions.push(
         registerCommand('serpent.compile', () => {
             window.showInformationMessage(
-                'La compilation Vyper n\'est pas disponible dans la version web. Ouvrez ce projet dans VSCode Desktop.',
+                'Vyper compilation is not available in the web version. Open this project in VSCode Desktop.',
             );
         }),
     );
 
-    logInfo('Extension web prête — coloration syntaxique et snippets disponibles');
+    logInfo('Web extension ready — syntax highlighting and snippets available');
 }
 
 /**
- * Désactivation de l'extension web.
+ * Web extension deactivation.
  */
 export function deactivate(): void {
-    logInfo('Extension web désactivée');
+    logInfo('Web extension deactivated');
 }
