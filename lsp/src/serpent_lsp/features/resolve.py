@@ -1,8 +1,8 @@
 """
-Résolution de symboles pour le Vyper Language Server.
+Symbol resolution for the Vyper Language Server.
 
-Utilitaires partagés pour résoudre les symboles à travers les modules,
-utilisés par les fonctionnalités de définition et de références.
+Shared utilities for resolving symbols across modules,
+used by definition and reference features.
 """
 
 import logging
