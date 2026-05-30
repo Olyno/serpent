@@ -1,4 +1,5 @@
 {
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
     "name": "Vyper",
     "scopeName": "source.vyper",
     "fileTypes": ["vy", "vyi"],
@@ -6,14 +7,24 @@
         { "include": "#comments" },
         { "include": "#strings" },
         { "include": "#imports" },
-        { "include": "#definitions" },
+        { "include": "#decorators" },
+        { "include": "#function-def" },
+        { "include": "#interface-def" },
+        { "include": "#struct-def" },
+        { "include": "#event-def" },
+        { "include": "#enum-def" },
+        { "include": "#flag-def" },
+        { "include": "#variable-def" },
+        { "include": "#constant-def" },
         { "include": "#keywords" },
         { "include": "#builtins" },
         { "include": "#special-vars" },
         { "include": "#constants" },
         { "include": "#types" },
         { "include": "#numbers" },
-        { "include": "#operators" }
+        { "include": "#member-access" },
+        { "include": "#operators" },
+        { "include": "#brackets" }
     ],
     "repository": {
         "comments": {
@@ -49,151 +60,149 @@
                 {
                     "name": "keyword.control.import.vyper",
                     "match": "\\b(import|from|as|uses|implements|initializes|exports)\\b"
-                },
-                {
-                    "name": "entity.name.namespace.vyper",
-                    "match": "(?<=import\\s+)([a-zA-Z_]\\w*)"
                 }
             ]
         },
-        "definitions": {
+        "decorators": {
             "patterns": [
                 {
-                    "name": "meta.function.vyper",
-                    "begin": "(@[a-zA-Z_]\\w*\\s*\\n)*\\s*\\b(def)\\b",
-                    "end": "(?=^\\S)",
-                    "beginCaptures": {
-                        "2": { "name": "keyword.control.vyper" }
-                    },
-                    "patterns": [
-                        {
-                            "name": "entity.name.function.vyper",
-                            "match": "\\b([a-zA-Z_]\\w*)\\s*\\("
-                        },
-                        { "include": "#parameters" },
-                        { "include": "#return-type" },
-                        { "include": "#type-annotations" },
-                        { "include": "#keywords" },
-                        { "include": "#builtins" },
-                        { "include": "#special-vars" },
-                        { "include": "#constants" },
-                        { "include": "#types" },
-                        { "include": "#numbers" },
-                        { "include": "#strings" },
-                        { "include": "#comments" },
-                        { "include": "#member-access" },
-                        { "include": "#operators" }
-                    ]
-                },
-                {
-                    "name": "meta.struct.vyper",
-                    "begin": "\\b(struct)\\b",
-                    "end": "(?=^\\S)",
-                    "beginCaptures": {
-                        "1": { "name": "storage.type.vyper" }
-                    },
-                    "patterns": [
-                        {
-                            "name": "entity.name.type.vyper",
-                            "match": "\\b([a-zA-Z_]\\w*)\\b"
-                        },
-                        { "include": "#type-annotations" }
-                    ]
-                },
-                {
-                    "name": "meta.enum.vyper",
-                    "begin": "\\b(enum)\\b",
-                    "end": "(?=^\\S)",
-                    "beginCaptures": {
-                        "1": { "name": "storage.type.vyper" }
-                    },
-                    "patterns": [
-                        {
-                            "name": "entity.name.type.vyper",
-                            "match": "\\b([a-zA-Z_]\\w*)\\b"
-                        }
-                    ]
-                },
-                {
-                    "name": "meta.event.vyper",
-                    "begin": "\\b(event)\\b",
-                    "end": "(?=^\\S)",
-                    "beginCaptures": {
-                        "1": { "name": "storage.type.vyper" }
-                    },
-                    "patterns": [
-                        {
-                            "name": "entity.name.type.vyper",
-                            "match": "\\b([a-zA-Z_]\\w*)\\b"
-                        },
-                        { "include": "#type-annotations" },
-                        {
-                            "name": "storage.modifier.vyper",
-                            "match": "\\b(indexed)\\b"
-                        }
-                    ]
-                },
-                {
-                    "name": "meta.interface.vyper",
-                    "begin": "\\b(interface)\\b",
-                    "end": "(?=^\\S)",
-                    "beginCaptures": {
-                        "1": { "name": "storage.type.vyper" }
-                    },
-                    "patterns": [
-                        {
-                            "name": "entity.name.type.vyper",
-                            "match": "\\b([a-zA-Z_]\\w*)\\b"
-                        }
-                    ]
-                },
-                {
-                    "name": "meta.flag.vyper",
-                    "begin": "\\b(flag)\\b",
-                    "end": "(?=^\\S)",
-                    "beginCaptures": {
-                        "1": { "name": "storage.type.vyper" }
-                    },
-                    "patterns": [
-                        {
-                            "name": "entity.name.type.vyper",
-                            "match": "\\b([a-zA-Z_]\\w*)\\b"
-                        }
-                    ]
+                    "name": "entity.name.function.decorator.vyper",
+                    "match": "@[a-zA-Z_]\\w*"
                 }
             ]
+        },
+        "function-def": {
+            "name": "meta.function.vyper",
+            "begin": "\\b(def)\\s+([a-zA-Z_]\\w*)\\s*(\\()",
+            "end": "(?=^\\s*\\S|^\\s*$)",
+            "beginCaptures": {
+                "1": { "name": "keyword.control.vyper" },
+                "2": { "name": "entity.name.function.vyper" },
+                "3": { "name": "punctuation.section.parens.begin.vyper" }
+            },
+            "patterns": [
+                { "include": "#parameters" },
+                { "include": "#return-type" },
+                { "include": "#type-annotations" },
+                { "include": "$self" }
+            ]
+        },
+        "interface-def": {
+            "name": "meta.interface.vyper",
+            "begin": "\\b(interface)\\s+([a-zA-Z_]\\w*)",
+            "end": "(?=^\\s*\\S|^\\s*$)",
+            "beginCaptures": {
+                "1": { "name": "storage.type.vyper" },
+                "2": { "name": "entity.name.type.vyper" }
+            },
+            "patterns": [
+                { "include": "#function-def" }
+            ]
+        },
+        "struct-def": {
+            "name": "meta.struct.vyper",
+            "begin": "\\b(struct)\\s+([a-zA-Z_]\\w*)",
+            "end": "(?=^\\s*\\S|^\\s*$)",
+            "beginCaptures": {
+                "1": { "name": "storage.type.vyper" },
+                "2": { "name": "entity.name.type.vyper" }
+            },
+            "patterns": [
+                { "include": "#type-annotations" },
+                { "include": "$self" }
+            ]
+        },
+        "event-def": {
+            "name": "meta.event.vyper",
+            "begin": "\\b(event)\\s+([a-zA-Z_]\\w*)",
+            "end": "(?=^\\s*\\S|^\\s*$)",
+            "beginCaptures": {
+                "1": { "name": "storage.type.vyper" },
+                "2": { "name": "entity.name.type.vyper" }
+            },
+            "patterns": [
+                { "include": "#type-annotations" },
+                {
+                    "name": "storage.modifier.vyper",
+                    "match": "\\bindexed\\b"
+                },
+                { "include": "$self" }
+            ]
+        },
+        "enum-def": {
+            "name": "meta.enum.vyper",
+            "begin": "\\b(enum)\\s+([a-zA-Z_]\\w*)",
+            "end": "(?=^\\s*\\S|^\\s*$)",
+            "beginCaptures": {
+                "1": { "name": "storage.type.vyper" },
+                "2": { "name": "entity.name.type.vyper" }
+            },
+            "patterns": []
+        },
+        "flag-def": {
+            "name": "meta.flag.vyper",
+            "begin": "\\b(flag)\\s+([a-zA-Z_]\\w*)",
+            "end": "(?=^\\s*\\S|^\\s*$)",
+            "beginCaptures": {
+                "1": { "name": "storage.type.vyper" },
+                "2": { "name": "entity.name.type.vyper" }
+            },
+            "patterns": []
+        },
+        "variable-def": {
+            "name": "meta.variable.vyper",
+            "match": "([a-zA-Z_]\\w*)\\s*:\\s*(public\\s+)?(\\()?([a-zA-Z_]\\w*)\\)?\\s*(=\\s*[^\\n]+)?",
+            "captures": {
+                "1": { "name": "variable.other.vyper" },
+                "2": { "name": "storage.modifier.vyper" },
+                "3": { "name": "punctuation.section.parens.vyper" },
+                "4": { "name": "support.type.vyper" },
+                "5": { "name": "keyword.operator.assignment.vyper" }
+            }
+        },
+        "constant-def": {
+            "name": "meta.constant.vyper",
+            "match": "([A-Z_][A-Z0-9_]*)\\s*:\\s*(constant|immutable)\\s*\\(([a-zA-Z_]\\w*)\\)\\s*=\\s*(.+)",
+            "captures": {
+                "1": { "name": "variable.other.constant.vyper" },
+                "2": { "name": "storage.modifier.vyper" },
+                "3": { "name": "support.type.vyper" }
+            }
         },
         "parameters": {
             "patterns": [
                 {
                     "name": "variable.parameter.vyper",
-                    "match": "\\b([a-zA-Z_]\\w*)\\s*(?=[:\\),])"
+                    "match": "([a-zA-Z_]\\w*)\\s*:\\s*"
+                },
+                {
+                    "name": "punctuation.separator.parameter.vyper",
+                    "match": ","
+                },
+                {
+                    "name": "punctuation.section.parens.end.vyper",
+                    "match": "\\)"
                 }
             ]
         },
         "return-type": {
-            "patterns": [
-                {
-                    "name": "storage.type.vyper",
-                    "match": "->"
-                }
-            ]
+            "match": "->\\s*([a-zA-Z_]\\w*)",
+            "captures": {
+                "0": { "name": "keyword.operator.arrow.vyper" },
+                "1": { "name": "support.type.vyper" }
+            }
         },
         "type-annotations": {
-            "patterns": [
-                {
-                    "match": ":\\s*\\b(public|constant|immutable|transient)\\b",
-                    "captures": {
-                        "1": { "name": "storage.modifier.vyper" }
-                    }
-                }
-            ]
+            "match": ":\\s*(public|constant|immutable|transient)\\b",
+            "captures": {
+                "1": { "name": "storage.modifier.vyper" }
+            }
         },
         "keywords": {
             "patterns": [
                 {
                     "name": "keyword.control.vyper",
-                    "match": "\\b(def|if|elif|else|for|return|raise|assert|pass|break|continue|in|and|or|not|range|log)\\b"
+                    "match": "\\b(def|if|elif|else|for|in|return|raise|assert|pass|break|continue|not|and|or|range|log|is)\\b"
                 },
                 {
                     "name": "storage.type.vyper",
@@ -224,11 +233,15 @@
         "constants": {
             "patterns": [
                 {
-                    "name": "constant.language.vyper",
-                    "match": "\\b(True|False|None|max_int128|min_int128|max_uint256|max_decimal|min_decimal|zero_address|empty_bytes32|zero_wei)\\b"
+                    "name": "constant.language.boolean.vyper",
+                    "match": "\\b(True|False|None)\\b"
                 },
                 {
-                    "name": "constant.numeric.vyper",
+                    "name": "constant.language.vyper",
+                    "match": "\\b(max_int128|min_int128|max_uint256|max_decimal|min_decimal|zero_address|empty_bytes32|zero_wei)\\b"
+                },
+                {
+                    "name": "constant.numeric.unit.vyper",
                     "match": "\\b(wei|kwei|babbage|shannon|finney|szabo|gwei|ada|lovelace|mwei|twei|pwei|ether)\\b"
                 }
             ]
@@ -265,15 +278,15 @@
                 },
                 {
                     "name": "variable.other.member.vyper",
-                    "match": "(?<=\\.)\\s*([a-zA-Z_]\\w*)"
+                    "match": "(?<=\\.)[a-zA-Z_]\\w*"
                 }
             ]
         },
         "operators": {
             "patterns": [
                 {
-                    "name": "keyword.operator.assignment.vyper",
-                    "match": "=|\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|<<=|>>=|\\*\\*="
+                    "name": "keyword.operator.assignment.augmented.vyper",
+                    "match": "\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|<<=|>>=|\\*\\*="
                 },
                 {
                     "name": "keyword.operator.comparison.vyper",
@@ -281,19 +294,43 @@
                 },
                 {
                     "name": "keyword.operator.arithmetic.vyper",
-                    "match": "\\+|-|\\*|/|%|\\*\\*"
+                    "match": "\\+|-|\\*(?!\\*)|/(?!/)|%"
+                },
+                {
+                    "name": "keyword.operator.arithmetic.vyper",
+                    "match": "\\*\\*"
                 },
                 {
                     "name": "keyword.operator.bitwise.vyper",
-                    "match": "&|\\||\\^|~|<<|>>"
+                    "match": "&(?!&)|\\|(?!\\|)|\\^|~|<<|>>"
                 },
                 {
-                    "name": "punctuation.separator.vyper",
-                    "match": ",|:"
+                    "name": "keyword.operator.logical.vyper",
+                    "match": "\\b(and|or|not)\\b"
                 },
                 {
-                    "name": "punctuation.section.vyper",
-                    "match": "\\(|\\)|\\[|\\]"
+                    "name": "punctuation.separator.colon.vyper",
+                    "match": ":"
+                },
+                {
+                    "name": "keyword.operator.assignment.vyper",
+                    "match": "="
+                },
+                {
+                    "name": "punctuation.separator.comma.vyper",
+                    "match": ","
+                }
+            ]
+        },
+        "brackets": {
+            "patterns": [
+                {
+                    "name": "punctuation.section.parens.vyper",
+                    "match": "\\(|\\)"
+                },
+                {
+                    "name": "punctuation.section.brackets.vyper",
+                    "match": "\\[|\\]"
                 }
             ]
         }
