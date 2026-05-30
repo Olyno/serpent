@@ -1,32 +1,32 @@
 /**
- * Constantes partagées pour l'extension Serpent VSCode.
+ * Shared constants for the Serpent VSCode extension.
  */
 
-/** Identifiant de configuration dans package.json */
+/** Configuration namespace in package.json */
 export const EXTENSION_NAMESPACE = 'serpent';
 
-/** Identifiant du langage Vyper */
+/** Vyper language identifier */
 export const LANGUAGE_ID = 'vyper';
 
-/** Nom affiché du serveur LSP */
+/** LSP server display name */
 export const LSP_SERVER_NAME = 'Serpent LSP';
 
-/** Identifiant interne du serveur LSP */
+/** LSP server internal ID */
 export const LSP_SERVER_ID = 'serpent-lsp';
 
-/** Module Python du serveur LSP */
+/** Python module for the LSP server */
 export const LSP_SERVER_MODULE = 'serpent_lsp';
 
-/** Commandes enregistrées */
+/** Registered commands */
 export const COMMAND_COMPILE = `${EXTENSION_NAMESPACE}.compile`;
 export const COMMAND_RESTART_LSP = `${EXTENSION_NAMESPACE}.restartLsp`;
 export const COMMAND_INSTALL_FORMATTER = `${EXTENSION_NAMESPACE}.installFormatter`;
 
-/** Paramètres de configuration */
+/** Configuration keys */
 export const CONFIG_LSP_ENABLED = 'lsp.enabled';
 export const CONFIG_COMPILE_ON_SAVE = 'compile.onSave';
 export const CONFIG_COMPILE_COMMAND = 'compile.command';
 export const CONFIG_PYTHON_INTERPRETER = 'python.interpreter';
 
-/** Extensions de fichiers Vyper */
+/** Vyper file extensions */
 export const VYPER_EXTENSIONS = ['.vy', '.vyi'];
