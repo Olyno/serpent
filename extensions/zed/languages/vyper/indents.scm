@@ -11,11 +11,9 @@
 (for_statement) @indent
 
 ; Outdent for block-ending keywords
-[
-  "pass"
-  "break"
-  "continue"
-] @indent_end
+(pass_statement) @indent_end
+(break_statement) @indent_end
+(continue_statement) @indent_end
 
 (return_statement) @indent_end
 (raise_statement) @indent_end
