@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+uv.lock
+.pytest_cache/
+
+# Node / VSCode
+node_modules/
+dist/
+*.vsix
+.vscode-test-web/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Références (projets clonés pour inspiration)
+_ref_*/
+
+# Secrets
+.env
+.env.*
