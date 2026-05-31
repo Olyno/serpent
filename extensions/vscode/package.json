@@ -8,10 +8,10 @@
     "icon": "images/icon.png",
     "repository": {
         "type": "git",
-        "url": "https://github.com/nousresearch/serpent"
+        "url": "https://github.com/Olyno/serpent"
     },
     "bugs": {
-        "url": "https://github.com/nousresearch/serpent/issues"
+        "url": "https://github.com/Olyno/serpent/issues"
     },
     "engines": {
         "vscode": "^1.87.0"

@@ -13,4 +13,6 @@ rev = "master"
 [language_servers.vyper]
 name = "Serpent LSP"
 language = "Vyper"
-command = "/home/olyno/.local/bin/serpent-lsp"
+# Auto-detect Flatpak, route through flatpak-spawn if sandboxed
+command = "sh"
+args = ["-c", "if [ -d /app ]; then exec flatpak-spawn --host serpent-lsp; else exec serpent-lsp; fi"]
