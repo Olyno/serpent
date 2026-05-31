@@ -53,10 +53,15 @@ def get_script(
         return dedent(
             f"""
             import json
+            import sys
+            import traceback
             from vyper.compiler import CompilerData
 
-            data = CompilerData({json.dumps(source)}).vyper_module
-            print(json.dumps(data.to_dict()))
+            try:
+                data = CompilerData({json.dumps(source)}).vyper_module
+                print(json.dumps(data.to_dict()))
+            except Exception as e:
+                print(json.dumps({{"error": str(e).split(chr(10))[0]}}))
             """
         )
 
@@ -64,21 +69,26 @@ def get_script(
     return dedent(
         f"""
         import json
+        import sys
+        import traceback
         from pathlib import Path
         from vyper.compiler import CompilerData
         from vyper.compiler.input_bundle import FilesystemInputBundle
         from vyper.semantics.analysis.imports import resolve_imports
 
-        search_paths = [Path(p) for p in {json.dumps(search_paths)}]
-        input_bundle = FilesystemInputBundle(search_paths)
-        file = input_bundle.load_file({json.dumps(file_path)})
-        module = CompilerData(file, input_bundle).vyper_module
         try:
-            with input_bundle.search_path(Path(module.resolved_path).parent):
-                resolve_imports(module, input_bundle)
-        except Exception:
-            pass
-        print(json.dumps(module.to_dict()))
+            search_paths = [Path(p) for p in {json.dumps(search_paths)}]
+            input_bundle = FilesystemInputBundle(search_paths)
+            file = input_bundle.load_file({json.dumps(file_path)})
+            module = CompilerData(file, input_bundle).vyper_module
+            try:
+                with input_bundle.search_path(Path(module.resolved_path).parent):
+                    resolve_imports(module, input_bundle)
+            except Exception:
+                pass
+            print(json.dumps(module.to_dict()))
+        except Exception as e:
+            print(json.dumps({{"error": str(e).split(chr(10))[0]}}))
         """
     )
 
@@ -131,7 +141,14 @@ def get_json_ast(
                 pass
 
     if result.returncode != 0:
-        error_message = result.stderr.strip() or "Unknown error"
+        # Try to extract clean error from stdout first
+        error_message = "Unknown error"
+        try:
+            output = json.loads(result.stdout)
+            if isinstance(output, dict) and "error" in output:
+                error_message = output["error"]
+        except (json.JSONDecodeError, KeyError):
+            error_message = result.stderr.strip() or "Unknown error"
         if temp_file is not None:
             temp_name = Path(temp_file.name).name
             error_message = error_message.replace(temp_name, Path(path).name)
@@ -151,6 +168,18 @@ def get_json_ast(
             "AST JSON parsing failed for Vyper %s : %s", vyper_version, exc
         )
         raise
+
+    if isinstance(parsed_json, dict) and "error" in parsed_json:
+        error_message = parsed_json["error"]
+        if temp_file is not None:
+            temp_name = Path(temp_file.name).name
+            error_message = error_message.replace(temp_name, Path(path).name)
+        logger.error(
+            "AST extraction failed for Vyper %s : %s",
+            vyper_version,
+            error_message,
+        )
+        raise RuntimeError(error_message)
 
     lsp_ast = _from_vyper_json_ast(parsed_json)
     if not isinstance(lsp_ast, Module):
