@@ -13,5 +13,4 @@ rev = "master"
 [language_servers.vyper]
 name = "Serpent LSP"
 language = "Vyper"
-command = "uv"
-args = ["run", "-m", "serpent_lsp"]
+command = "/home/olyno/.local/bin/serpent-lsp"
