@@ -34,8 +34,7 @@ from serpent_lsp.parser import Module, parse_module
 logger = logging.getLogger("serpent_lsp")
 
 
-# Pattern to extract Vyper version from pragma (used before AST parse)
-_VERSION_PATTERN = re.compile(r'#\s*pragma\s+version\s+(.+)')
+from serpent_lsp.parser import _VERSION_PATTERN
 
 # Debounce delay for AST parsing (seconds)
 _PARSE_DEBOUNCE_DELAY = 0.3
