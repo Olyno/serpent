@@ -149,7 +149,9 @@
         "test": "echo 'Tests à implémenter'"
     },
     "dependencies": {
-        "vscode-languageclient": "^9.0.1"
+        "@olyno/tree-sitter-vyper": "^0.1.0",
+        "vscode-languageclient": "^9.0.1",
+        "web-tree-sitter": "^0.26.9"
     },
     "devDependencies": {
         "@biomejs/biome": "^2.4.16",

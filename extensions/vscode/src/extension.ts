@@ -6,7 +6,7 @@
  */
 
 import { execFile } from 'node:child_process';
-import { type ExtensionContext, window, workspace } from 'vscode';
+import { type ExtensionContext, languages, window, workspace } from 'vscode';
 import type { LanguageClient } from 'vscode-languageclient/node';
 import {
     COMMAND_COMPILE,
@@ -18,6 +18,7 @@ import {
 import { createLogger, logError, logInfo } from './common/logging.js';
 import { startLspClient, stopLspClient } from './common/server.js';
 import { checkIfConfigurationChanged, getExtensionSettings } from './common/settings.js';
+import { initTreeSitter, disposeTreeSitter, TREESITTER_LEGEND } from './common/treesitter.js';
 import { isCompilableVyperFile } from './common/utilities.js';
 import { registerCommand } from './common/vscodeapi.js';
 
@@ -32,6 +33,21 @@ export async function activate(context: ExtensionContext): Promise<void> {
     const outputChannel = createLogger(LSP_SERVER_NAME);
     context.subscriptions.push(outputChannel);
     logInfo('Serpent extension activated');
+
+    // Initialize tree-sitter for richer syntax highlighting
+    const tsProvider = await initTreeSitter(context);
+    if (tsProvider) {
+        context.subscriptions.push(
+            languages.registerDocumentSemanticTokensProvider(
+                { language: LANGUAGE_ID },
+                tsProvider,
+                TREESITTER_LEGEND,
+            ),
+        );
+        logInfo('Tree-sitter highlighting enabled');
+    } else {
+        logInfo('Tree-sitter not available — using TextMate grammar only');
+    }
 
     // Start LSP if enabled in settings
     const settings = getExtensionSettings();
@@ -87,6 +103,7 @@ export async function deactivate(): Promise<void> {
     logInfo('Deactivating extension...');
     await stopLspClient(lspClient);
     lspClient = undefined;
+    disposeTreeSitter();
 }
 
 /**

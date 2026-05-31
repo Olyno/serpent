@@ -28,7 +28,7 @@ const desktopConfig = {
     outfile: 'dist/extension.js',
     format: 'cjs',
     platform: 'node',
-    external: ['vscode', 'vscode-languageclient/node'],
+    external: ['vscode', 'vscode-languageclient/node', 'web-tree-sitter'],
 };
 
 /** Bundle web (navigateur, vscode.dev) */
@@ -40,7 +40,7 @@ const webConfig = {
     platform: 'browser',
     mainFields: ['browser', 'module', 'main'],
     conditions: ['browser'],
-    external: ['vscode'],
+    external: ['vscode', 'web-tree-sitter'],
     alias: {
         'vscode-languageclient/node': 'vscode-languageclient',
     },
