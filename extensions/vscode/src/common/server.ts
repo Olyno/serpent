@@ -23,8 +23,9 @@ import { isVirtualWorkspace } from './vscodeapi.js';
 /** Detect if running inside a Flatpak sandbox */
 function isFlatpak(): boolean {
     try {
-        const { statSync } = require('node:fs');
-        return statSync('/app').isDirectory() || !!process.env.FLATPAK_ID;
+        const { execSync } = require('node:child_process');
+        execSync('command -v flatpak-spawn', { stdio: 'ignore' });
+        return true;
     } catch {
         return false;
     }

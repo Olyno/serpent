@@ -137,7 +137,7 @@ async function compileContract(filePath: string): Promise<void> {
 
     // In Flatpak, route through flatpak-spawn to reach host tools
     const isSandboxed = (() => {
-        try { return require('node:fs').statSync('/app').isDirectory() || !!process.env.FLATPAK_ID; }
+        try { require('node:child_process').execSync('command -v flatpak-spawn', { stdio: 'ignore' }); return true; }
         catch { return false; }
     })();
 
