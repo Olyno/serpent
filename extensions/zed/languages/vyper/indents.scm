@@ -1,4 +1,6 @@
 ; Zed auto-indentation for Vyper
+; Only @indent and @end are valid captures.
+; pass/break/continue/return indentation is handled by the tree-sitter parser.
 
 (function_definition) @indent
 (struct_definition) @indent
@@ -8,10 +10,3 @@
 (if_statement) @indent
 (for_statement) @indent
 (import_from_statement) @indent
-
-(pass_statement) @indent_end
-(break_statement) @indent_end
-(continue_statement) @indent_end
-(return_statement) @indent_end
-(raise_statement) @indent_end
-(assert_statement) @indent_end

@@ -13,6 +13,3 @@ rev = "master"
 [language_servers.vyper]
 name = "Serpent LSP"
 language = "Vyper"
-# Auto-detect Flatpak, route through flatpak-spawn if sandboxed
-command = "sh"
-args = ["-c", "if command -v flatpak-spawn >/dev/null 2>&1; then exec flatpak-spawn --host serpent-lsp; else exec serpent-lsp; fi"]

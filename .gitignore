@@ -35,3 +35,4 @@ _tree_sitter_vyper/
 # Secrets
 .env
 .env.*
+target/
