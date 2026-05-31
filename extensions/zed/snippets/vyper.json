@@ -1,0 +1,122 @@
+{
+  "Interface": {
+    "prefix": "interface",
+    "body": ["# @version ^0.4.0", "", "interface ${1:IName}:", "    def ${2:method}(${3:arg: uint256}) -> ${4:uint256}:", "        pass"],
+    "description": "Interface definition"
+  },
+  "Struct": {
+    "prefix": "struct",
+    "body": ["struct ${1:Name}:", "    ${2:field}: ${3:uint256}", "    ${4:other}: ${5:address}"],
+    "description": "Struct definition"
+  },
+  "Event": {
+    "prefix": "event",
+    "body": ["event ${1:Name}:", "    sender: indexed(address)", "    value: uint256"],
+    "description": "Event declaration"
+  },
+  "External Function": {
+    "prefix": "extdef",
+    "body": ["@external", "def ${1:name}(${2:arg: uint256}) -> ${3:uint256}:", "    ${4:pass}"],
+    "description": "External function"
+  },
+  "Internal Function": {
+    "prefix": "intdef",
+    "body": ["@internal", "def ${1:name}(${2:arg: uint256}) -> ${3:uint256}:", "    ${4:pass}"],
+    "description": "Internal function"
+  },
+  "View Function": {
+    "prefix": "viewdef",
+    "body": ["@view", "@external", "def ${1:name}(${2:arg: uint256}) -> ${3:uint256}:", "    return ${4:0}"],
+    "description": "View (read-only) function"
+  },
+  "Pure Function": {
+    "prefix": "puredef",
+    "body": ["@pure", "@external", "def ${1:name}(${2:a: uint256}, ${3:b: uint256}) -> uint256:", "    return ${2:a} + ${3:b}"],
+    "description": "Pure function (no state access)"
+  },
+  "Payable Function": {
+    "prefix": "paydef",
+    "body": ["@external", "@payable", "def ${1:name}():", "    ${2:pass}"],
+    "description": "Payable function (receives ETH)"
+  },
+  "Storage Variable": {
+    "prefix": "var",
+    "body": ["${1:name}: public(${2:uint256})"],
+    "description": "Public storage variable"
+  },
+  "Immutable": {
+    "prefix": "imm",
+    "body": ["${1:NAME}: immutable(${2:uint256})", "", "@external", "def __init__():", "    ${1:NAME} = ${3:0}"],
+    "description": "Immutable variable with constructor"
+  },
+  "Constructor": {
+    "prefix": "init",
+    "body": ["@external", "def __init__():", "    ${1:pass}"],
+    "description": "Constructor"
+  },
+  "Enum": {
+    "prefix": "enum",
+    "body": ["enum ${1:Name}:", "    ${2:VARIANT_A}", "    ${3:VARIANT_B}"],
+    "description": "Enum definition"
+  },
+  "Constant": {
+    "prefix": "const",
+    "body": ["${1:NAME}: constant(${2:uint256}) = ${3:0}"],
+    "description": "Compile-time constant"
+  },
+  "If Statement": {
+    "prefix": "if",
+    "body": ["if ${1:condition}:", "    ${2:pass}"],
+    "description": "If block"
+  },
+  "If-Else Statement": {
+    "prefix": "ifelse",
+    "body": ["if ${1:condition}:", "    ${2:pass}", "else:", "    ${3:pass}"],
+    "description": "If-else block"
+  },
+  "For Loop": {
+    "prefix": "for",
+    "body": ["for ${1:i}: uint256 in range(${2:10}):", "    ${3:pass}"],
+    "description": "For loop over range"
+  },
+  "Assert": {
+    "prefix": "assert",
+    "body": ["assert ${1:condition}, \"${2:reason}\""],
+    "description": "Assert statement"
+  },
+  "Log/Event Emit": {
+    "prefix": "log",
+    "body": ["log ${1:EventName}(${2:args})"],
+    "description": "Emit an event"
+  },
+  "Import": {
+    "prefix": "import",
+    "body": ["import ${1:module}"],
+    "description": "Import statement"
+  },
+  "From Import": {
+    "prefix": "from",
+    "body": ["from ${1:module} import ${2:name}"],
+    "description": "Selective import"
+  },
+  "Implements": {
+    "prefix": "implements",
+    "body": ["implements: ${1:InterfaceName}"],
+    "description": "Interface implementation"
+  },
+  "Export": {
+    "prefix": "export",
+    "body": ["export ${1:function_name}"],
+    "description": "Export a function from a module"
+  },
+  "HashMap": {
+    "prefix": "hashmap",
+    "body": ["${1:name}: public(HashMap[${2:address}, ${3:uint256}])"],
+    "description": "HashMap storage variable"
+  },
+  "DynArray": {
+    "prefix": "dynarray",
+    "body": ["${1:name}: public(DynArray[${2:uint256}, ${3:10}])"],
+    "description": "Dynamic array (bounded)"
+  }
+}
