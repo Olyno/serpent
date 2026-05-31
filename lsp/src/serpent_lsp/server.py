@@ -107,7 +107,7 @@ class SerpentLanguageServer(LanguageServer):
             return False
         except RuntimeError as e:
             self.logger.warning("AST parse failed for %s: %s", doc.uri, e)
-            self._publish_parse_error(doc.uri, str(e), is_version_error=False)
+            # Don't publish duplicate diagnostics — compilation will handle it
             return False
         except Exception as e:
             self.logger.error("Unexpected parse error for %s: %s", doc.uri, e)
@@ -267,10 +267,10 @@ class SerpentLanguageServer(LanguageServer):
     ) -> None:
         """Run full Vyper compilation and publish diagnostics."""
         module = self.modules.get(doc.uri)
-        if module is None:
+        version = module.version if module else self.default_version
+        if version is None:
+            self.logger.debug("No Vyper version available for %s", doc.uri)
             return
-
-        version = module.version
 
         self.logger.debug(
             "Full diagnostics for %s (vyper %s)", doc.uri, version
