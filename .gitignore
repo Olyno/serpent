@@ -26,6 +26,12 @@ Thumbs.db
 # Références (projets clonés pour inspiration)
 _ref_*/
 
+# Tree-sitter (repo externe, publié sur npm)
+_tree_sitter_vyper/
+
+# WASM précompilé (généré par tree-sitter build)
+*.wasm
+
 # Secrets
 .env
 .env.*

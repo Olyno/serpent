@@ -19,8 +19,7 @@ serpent/
 │   ├── vscode/          # Visual Studio Code extension (TypeScript + ESM)
 │   └── zed/             # Zed extension (TOML + tree-sitter queries)
 ├── lsp/                 # LSP server (Python + pygls)
-├── grammars/
-│   └── tree-sitter-vyper/  # Tree-sitter grammar for Vyper
+├── _tree_sitter_vyper/     # Tree-sitter grammar for Vyper
 └── .github/workflows/   # CI/CD
 ```
 
@@ -61,7 +60,7 @@ zed:install-extension serpent-vyper
 |-----------|-------|-------|
 | `extensions/vscode/` | TypeScript + ESM | `npm run compile` (esbuild) |
 | `lsp/` | Python + pygls | `uv run -m serpent_lsp` |
-| `grammars/tree-sitter-vyper/` | JavaScript + C | `npx tree-sitter generate` |
+| `_tree_sitter_vyper/` | JavaScript + C + Rust | `npx tree-sitter generate` |
 | `extensions/zed/` | Declarative TOML | No build needed |
 
 ### Full Build
