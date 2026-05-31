@@ -74,37 +74,60 @@ def _get_compile_script(
         )
 
     # Version >= 0.4.0 : stops at annotated AST (semantic analysis)
-    return dedent(
-        f"""
-        import json
-        import sys
-        from pathlib import Path
+    _template = """\
+import json
+import sys
+from pathlib import Path
 
-        try:
-            from vyper.compiler import CompilerData
-            from vyper.compiler.input_bundle import FilesystemInputBundle
+try:
+    from vyper.compiler import CompilerData
+    from vyper.compiler.input_bundle import FilesystemInputBundle
 
-            search_paths = [Path(p) for p in {json.dumps(search_paths)}]
-            input_bundle = FilesystemInputBundle(search_paths)
-            file = input_bundle.load_file({json.dumps(file_path)})
-            compiler_data = CompilerData(file, input_bundle)
-            _ = compiler_data.annotated_vyper_module
-            print(json.dumps({{\"success\": True}}))
-        except Exception as e:
-            error_info = {{
-                \"success\": False,
-                \"error_type\": type(e).__name__,
-                \"message\": str(e).split(chr(10))[0]
+    search_paths = [Path(p) for p in {search_paths_json}]
+    input_bundle = FilesystemInputBundle(search_paths)
+    file = input_bundle.load_file({file_path_json})
+    compiler_data = CompilerData(file, input_bundle)
+    _ = compiler_data.annotated_vyper_module
+    print(json.dumps({{"success": True}}))
+except Exception as e:
+    from vyper.exceptions import VyperException
+    if isinstance(e, VyperException) and hasattr(e, '_vyper_errors'):
+        errors = []
+        for err in e._vyper_errors:
+            node = err.annotations[0] if hasattr(err, 'annotations') and err.annotations else None
+            err_data = {{
+                "message": str(err).split(chr(10))[0],
+                "error_type": type(err).__name__
             }}
-            if hasattr(e, 'annotations') and e.annotations:
-                node = e.annotations[0]
-                if hasattr(node, 'lineno'):
-                    error_info[\"lineno\"] = node.lineno
-                    error_info[\"col_offset\"] = getattr(node, 'col_offset', 0)
-                    error_info[\"end_lineno\"] = getattr(node, 'end_lineno', node.lineno)
-                    error_info[\"end_col_offset\"] = getattr(node, 'end_col_offset', error_info[\"col_offset\"] + 1)
-            print(json.dumps(error_info))
-        """
+            if node and hasattr(node, 'lineno'):
+                err_data["lineno"] = node.lineno
+                err_data["col_offset"] = getattr(node, 'col_offset', 0)
+                err_data["end_lineno"] = getattr(node, 'end_lineno', node.lineno)
+                err_data["end_col_offset"] = getattr(node, 'end_col_offset', err_data["col_offset"] + 1)
+            errors.append(err_data)
+        print(json.dumps({{
+            "success": False,
+            "error_type": type(e).__name__,
+            "errors": errors
+        }}))
+        sys.exit(0)
+    error_info = {{
+        "success": False,
+        "error_type": type(e).__name__,
+        "message": str(e).split(chr(10))[0]
+    }}
+    if hasattr(e, 'annotations') and e.annotations:
+        node = e.annotations[0]
+        if hasattr(node, 'lineno'):
+            error_info["lineno"] = node.lineno
+            error_info["col_offset"] = getattr(node, 'col_offset', 0)
+            error_info["end_lineno"] = getattr(node, 'end_lineno', node.lineno)
+            error_info["end_col_offset"] = getattr(node, 'end_col_offset', error_info["col_offset"] + 1)
+    print(json.dumps(error_info))
+"""
+    return _template.format(
+        search_paths_json=json.dumps(search_paths),
+        file_path_json=json.dumps(file_path),
     )
 
 def parse_error_location(message: str) -> Tuple[int, int]:
@@ -242,6 +265,22 @@ def compile_and_get_diagnostics(
 
     if output.get("success"):
         return []
+
+    # Multi-error format (ExceptionList via _vyper_errors)
+    if "errors" in output:
+        for err in output["errors"]:
+            line = err.get("lineno", 1) - 1
+            col = err.get("col_offset", 0)
+            msg = err.get("message", "Unknown error")
+            err_type = err.get("error_type", output.get("error_type", "Error"))
+            diagnostics.append(
+                create_diagnostic(
+                    message=f"[{err_type}] {msg}",
+                    start_line=line,
+                    start_col=col,
+                )
+            )
+        return diagnostics
 
     # Extraire les informations d'erreur
     error_type = output.get("error_type")
