@@ -155,7 +155,7 @@
         "test": "echo 'Tests à implémenter'"
     },
     "dependencies": {
-        "@olyno/tree-sitter-vyper": "file:../../../_ref_tree_sitter_vyper/olyno-tree-sitter-vyper-0.1.0.tgz",
+        "@olyno/tree-sitter-vyper": "^0.1.1",
         "vscode-languageclient": "^9.0.1",
         "web-tree-sitter": "^0.26.9"
     },
