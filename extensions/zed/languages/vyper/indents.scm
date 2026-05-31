@@ -1,12 +1,22 @@
 ; Zed auto-indentation for Vyper
-; Only @indent and @end are valid captures.
-; pass/break/continue/return indentation is handled by the tree-sitter parser.
+; Uses @start.X captures (matching Python's pattern) with
+; increase_indent_pattern / decrease_indent_patterns in config.toml
+;
+; @start.X suffix is matched against valid_after in decrease_indent_patterns
+; to determine where elif/else should outdent.
 
-(function_definition) @indent
-(struct_definition) @indent
-(event_definition) @indent
-(enum_definition) @indent
-(interface_definition) @indent
-(if_statement) @indent
-(for_statement) @indent
-(import_from_statement) @indent
+(_
+  "["
+  "]" @end) @indent
+
+(_
+  "("
+  ")" @end) @indent
+
+(function_definition) @start.def
+(struct_definition) @start.class
+(event_definition) @start.class
+(enum_definition) @start.class
+(interface_definition) @start.class
+(if_statement) @start.if
+(for_statement) @start.for
