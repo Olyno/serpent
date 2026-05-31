@@ -7,6 +7,8 @@ Handles document events, navigation, completion, hover, and diagnostics.
 
 import asyncio
 import logging
+import re
+from pathlib import Path
 from typing import Dict, List, Optional
 
 from lsprotocol import types
@@ -30,6 +32,10 @@ from serpent_lsp.logger import setup_logging
 from serpent_lsp.parser import Module, parse_module
 
 logger = logging.getLogger("serpent_lsp")
+
+
+# Pattern to extract Vyper version from pragma (used before AST parse)
+_VERSION_PATTERN = re.compile(r'#\s*pragma\s+version\s+(.+)')
 
 # Debounce delay for AST parsing (seconds)
 _PARSE_DEBOUNCE_DELAY = 0.3
@@ -91,6 +97,12 @@ class SerpentLanguageServer(LanguageServer):
             True if parsing succeeded, False otherwise.
         """
         try:
+            # Detect version early so diagnostics can run even if AST fails
+            content = doc.source if doc.source else Path(doc.path).read_text()
+            match = _VERSION_PATTERN.search(content)
+            if match and not self.default_version:
+                self.default_version = match.group(1)
+
             self.modules[doc.uri] = parse_module(
                 doc.path,
                 default_version=self.default_version,
