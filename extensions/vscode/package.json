@@ -33,7 +33,7 @@
     "activationEvents": [
         "onLanguage:vyper"
     ],
-    "main": "./dist/extension.js",
+    "main": "./dist/extension.cjs",
     "browser": "./dist/web/extension.js",
     "contributes": {
         "languages": [
@@ -110,6 +110,12 @@
                     "default": "vyper",
                     "description": "Shell command to invoke the Vyper compiler (e.g. 'vyper', 'python -m vyper')."
                 },
+                "serpent.lsp.serverPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to the serpent-lsp executable. Leave empty to use 'serpent-lsp' from PATH.",
+                    "scope": "machine"
+                },
                 "serpent.python.interpreter": {
                     "type": "array",
                     "items": {
@@ -149,7 +155,7 @@
         "test": "echo 'Tests à implémenter'"
     },
     "dependencies": {
-        "@olyno/tree-sitter-vyper": "^0.1.0",
+        "@olyno/tree-sitter-vyper": "file:../../../_ref_tree_sitter_vyper/olyno-tree-sitter-vyper-0.1.0.tgz",
         "vscode-languageclient": "^9.0.1",
         "web-tree-sitter": "^0.26.9"
     },
@@ -161,5 +167,8 @@
         "@vscode/test-web": "^0.0.62",
         "esbuild": "^0.24.0",
         "typescript": "^5.6.0"
+    },
+    "allowScripts": {
+        "esbuild@0.24.2": true
     }
 }

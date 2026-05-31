@@ -27,6 +27,7 @@ export const CONFIG_LSP_ENABLED = 'lsp.enabled';
 export const CONFIG_COMPILE_ON_SAVE = 'compile.onSave';
 export const CONFIG_COMPILE_COMMAND = 'compile.command';
 export const CONFIG_PYTHON_INTERPRETER = 'python.interpreter';
+export const CONFIG_LSP_SERVER_PATH = 'lsp.serverPath';
 
 /** Vyper file extensions */
 export const VYPER_EXTENSIONS = ['.vy', '.vyi'];

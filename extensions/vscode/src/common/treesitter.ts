@@ -112,18 +112,22 @@ async function readTextFileVsCode(uri: Uri): Promise<string> {
 // ---------------------------------------------------------------------------
 
 /**
- * Resolve the path to the Vyper WASM grammar.
+ * Resolve the path to the Vyper WASM grammar from @olyno/tree-sitter-vyper.
  *
- * Desktop: uses require.resolve (fast, validates the dependency is installed).
+ * Desktop: uses import.meta.resolve (ESM) or createRequire (fallback).
  * Web: uses vscode.workspace.fs relative to the extension root.
  */
 function resolveWasmUri(context: ExtensionContext): Uri {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        return Uri.file(require.resolve('@olyno/tree-sitter-vyper/tree-sitter-vyper.wasm'));
+        // ESM: import.meta.resolve
+        const resolved = import.meta.resolve('@olyno/tree-sitter-vyper/tree-sitter-vyper.wasm');
+        if (resolved) {
+            return Uri.file(resolved.replace('file://', ''));
+        }
     } catch {
-        return Uri.joinPath(context.extensionUri, 'node_modules', '@olyno', 'tree-sitter-vyper', 'tree-sitter-vyper.wasm');
+        // Web or older Node: fallback to workspace.fs
     }
+    return Uri.joinPath(context.extensionUri, 'node_modules', '@olyno', 'tree-sitter-vyper', 'tree-sitter-vyper.wasm');
 }
 
 /**

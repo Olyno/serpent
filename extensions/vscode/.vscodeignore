@@ -6,4 +6,3 @@ biome.json
 tsconfig.json
 esbuild.config.mjs
 test/**
-node_modules/**

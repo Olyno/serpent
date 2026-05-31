@@ -4,7 +4,6 @@
  */
 
 import { context, build } from 'esbuild';
-import { readFileSync } from 'node:fs';
 
 const isWatch = process.argv.includes('--watch');
 const isProduction = process.argv.includes('--production');
@@ -25,10 +24,10 @@ const baseOptions = {
 const desktopConfig = {
     ...baseOptions,
     entryPoints: ['src/extension.ts'],
-    outfile: 'dist/extension.js',
+    outfile: 'dist/extension.cjs',
     format: 'cjs',
     platform: 'node',
-    external: ['vscode', 'vscode-languageclient/node', 'web-tree-sitter'],
+    external: ['vscode', 'vscode-languageclient', 'web-tree-sitter'],
 };
 
 /** Bundle web (navigateur, vscode.dev) */
@@ -36,7 +35,7 @@ const webConfig = {
     ...baseOptions,
     entryPoints: ['src/extension.web.ts'],
     outfile: 'dist/web/extension.js',
-    format: 'cjs',
+    format: 'esm',
     platform: 'browser',
     mainFields: ['browser', 'module', 'main'],
     conditions: ['browser'],

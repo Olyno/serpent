@@ -8,6 +8,7 @@ import {
     CONFIG_COMPILE_COMMAND,
     CONFIG_COMPILE_ON_SAVE,
     CONFIG_LSP_ENABLED,
+    CONFIG_LSP_SERVER_PATH,
     CONFIG_PYTHON_INTERPRETER,
     EXTENSION_NAMESPACE,
 } from './constants.js';
@@ -23,6 +24,8 @@ export interface ExtensionSettings {
     compileCommand: string;
     /** Path to Python interpreter (array for compatibility) */
     pythonInterpreter: string[];
+    /** Path to the LSP server executable */
+    lspServerPath: string;
 }
 
 /** Read extension settings from VSCode configuration */
@@ -33,6 +36,7 @@ export function getExtensionSettings(scope?: ConfigurationScope): ExtensionSetti
         compileOnSave: readConfig<boolean>(config, CONFIG_COMPILE_ON_SAVE, true),
         compileCommand: readConfig<string>(config, CONFIG_COMPILE_COMMAND, 'vyper'),
         pythonInterpreter: readConfig<string[]>(config, CONFIG_PYTHON_INTERPRETER, []),
+        lspServerPath: readConfig<string>(config, CONFIG_LSP_SERVER_PATH, ''),
     };
 }
 

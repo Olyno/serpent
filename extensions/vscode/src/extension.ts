@@ -135,10 +135,24 @@ async function compileContract(filePath: string): Promise<void> {
     const compileCommand = settings.compileCommand;
     const commandParts = compileCommand.split(/\s+/);
 
+    // In Flatpak, route through flatpak-spawn to reach host tools
+    const isSandboxed = (() => {
+        try { return require('node:fs').statSync('/app').isDirectory() || !!process.env.FLATPAK_ID; }
+        catch { return false; }
+    })();
+
+    let execCommand = commandParts[0];
+    let execArgs = [...commandParts.slice(1), filePath];
+
+    if (isSandboxed && !execCommand.includes('/')) {
+        execArgs = ['--host', execCommand, ...execArgs];
+        execCommand = '/usr/bin/flatpak-spawn';
+    }
+
     logInfo(`Compiling ${filePath} with command: ${compileCommand}`);
 
     return new Promise((resolveResult) => {
-        execFile(commandParts[0], [...commandParts.slice(1), filePath], { timeout: 30000 }, (error, stdout, stderr) => {
+        execFile(execCommand, execArgs, { timeout: 30000 }, (error, stdout, stderr) => {
             if (error) {
                 const errorMessage = stderr || error.message;
                 logError(`Compilation failed: ${errorMessage}`);

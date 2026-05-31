@@ -16,8 +16,19 @@ import {
 } from 'vscode-languageclient/node';
 
 import { logDebug, logError, logInfo } from './logging.js';
+import { getExtensionSettings } from './settings.js';
 import { detectPython, isPythonSupported } from './python.js';
 import { isVirtualWorkspace } from './vscodeapi.js';
+
+/** Detect if running inside a Flatpak sandbox */
+function isFlatpak(): boolean {
+    try {
+        const { statSync } = require('node:fs');
+        return statSync('/app').isDirectory() || !!process.env.FLATPAK_ID;
+    } catch {
+        return false;
+    }
+}
 
 /**
  * Create LSP server options.
@@ -37,12 +48,23 @@ async function createServerOptions(): Promise<ServerOptions | undefined> {
     logInfo(`Python interpreter detected: ${pythonInfo.path} (${pythonInfo.version})`);
     logDebug(`Working directory: ${pythonInfo.cwd}`);
 
-    // Launch via python -m serpent_lsp
+    // Launch serpent-lsp directly (installed via uv tool install)
+    const settings = getExtensionSettings();
+    let lspCommand = settings.lspServerPath || process.env.SERPENT_LSP_PATH || 'serpent-lsp';
+
+    // In Flatpak sandbox, route through flatpak-spawn to reach the host
+    if (isFlatpak() && !lspCommand.includes('/')) {
+        logInfo('Flatpak detected — using flatpak-spawn to reach host LSP');
+        return {
+            command: '/usr/bin/flatpak-spawn',
+            args: ['--host', lspCommand],
+            options: { env: { ...process.env } },
+        };
+    }
+
     return {
-        command: pythonInfo.path,
-        args: ['-m', 'serpent_lsp'],
+        command: lspCommand,
         options: {
-            cwd: pythonInfo.cwd,
             env: { ...process.env },
         },
     };
