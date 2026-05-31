@@ -78,7 +78,7 @@ def _get_compile_script(
         f"""
         import json
         import sys
-                from pathlib import Path
+        from pathlib import Path
 
         try:
             from vyper.compiler import CompilerData
@@ -203,7 +203,7 @@ def compile_and_get_diagnostics(
     if source is not None and Version(vyper_version) >= Version("0.4.0"):
         suffix = Path(path).suffix or ".vy"
         temp_file = tempfile.NamedTemporaryFile(
-            mode="w", suffix=suffix, delete=False, dir=Path(path).parent
+            mode="w", prefix=".", suffix=suffix, delete=False, dir=Path(path).parent
         )
         temp_file.write(source)
         temp_file.close()
