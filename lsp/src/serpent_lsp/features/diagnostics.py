@@ -226,8 +226,8 @@ def compile_and_get_diagnostics(
     if source is not None and Version(vyper_version) >= Version("0.4.0"):
         suffix = Path(path).suffix or ".vy"
         temp_file = tempfile.NamedTemporaryFile(
-            mode="w", prefix=".", suffix=suffix, delete=False, dir=Path(path).parent
-        )
+            mode="w", prefix=".serpent_", suffix=suffix, delete=False
+        )  # use system temp dir, NOT the source directory (noise in IDE tree)
         temp_file.write(source)
         temp_file.close()
         effective_path = temp_file.name
