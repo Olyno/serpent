@@ -26,7 +26,6 @@ _ERROR_LOCATION_PATTERN = re.compile(r"line\s+(\d+):(\d+)")
 # Pattern to extract Vyper error type
 _ERROR_TYPE_PATTERN = re.compile(r"vyper\.exceptions\.(\w+)")
 
-
 def _get_compile_script(
     file_path: str,
     vyper_version: str,
@@ -52,8 +51,7 @@ def _get_compile_script(
             f"""
             import json
             import sys
-            import traceback
-
+            
             try:
                 from vyper import compile_code
                 compile_code({json.dumps(source)})
@@ -62,8 +60,7 @@ def _get_compile_script(
                 error_info = {{
                     \"success\": False,
                     \"error_type\": type(e).__name__,
-                    \"message\": str(e),
-                    \"traceback\": traceback.format_exc()
+                    \"message\": str(e).split(chr(10))[0]
                 }}
                 if hasattr(e, 'annotations') and e.annotations:
                     node = e.annotations[0]
@@ -81,8 +78,7 @@ def _get_compile_script(
         f"""
         import json
         import sys
-        import traceback
-        from pathlib import Path
+                from pathlib import Path
 
         try:
             from vyper.compiler import CompilerData
@@ -98,8 +94,7 @@ def _get_compile_script(
             error_info = {{
                 \"success\": False,
                 \"error_type\": type(e).__name__,
-                \"message\": str(e),
-                \"traceback\": traceback.format_exc()
+                \"message\": str(e).split(chr(10))[0]
             }}
             if hasattr(e, 'annotations') and e.annotations:
                 node = e.annotations[0]
@@ -111,7 +106,6 @@ def _get_compile_script(
             print(json.dumps(error_info))
         """
     )
-
 
 def parse_error_location(message: str) -> Tuple[int, int]:
     """
@@ -129,14 +123,12 @@ def parse_error_location(message: str) -> Tuple[int, int]:
         return max(0, line), max(0, col)
     return 0, 0
 
-
-def _parse_error_type(traceback_str: str) -> Optional[str]:
-    """Extracts the Vyper exception type from a traceback."""
-    match = _ERROR_TYPE_PATTERN.search(traceback_str)
+def _parse_error_type(error_text: str) -> Optional[str]:
+    """Extracts the Vyper exception type from an error message."""
+    match = _ERROR_TYPE_PATTERN.search(error_text)
     if match:
         return match.group(1)
     return None
-
 
 def _get_severity(error_type: Optional[str]) -> types.DiagnosticSeverity:
     """Maps Vyper error types to LSP severities."""
@@ -144,7 +136,6 @@ def _get_severity(error_type: Optional[str]) -> types.DiagnosticSeverity:
     if error_type in warning_types:
         return types.DiagnosticSeverity.Warning
     return types.DiagnosticSeverity.Error
-
 
 def create_diagnostic(
     message: str,
@@ -184,7 +175,6 @@ def create_diagnostic(
         severity=severity,
         source=source,
     )
-
 
 def compile_and_get_diagnostics(
     path: str,
@@ -258,10 +248,10 @@ def compile_and_get_diagnostics(
     message = sanitize_message(
         output.get("message", "Erreur de compilation inconnue")
     )
-    traceback_str = sanitize_message(output.get("traceback", ""))
+    
 
     if not error_type or error_type == "Exception":
-        parsed_type = _parse_error_type(traceback_str)
+        parsed_type = _parse_error_type(message)
         if parsed_type:
             error_type = parsed_type
 
@@ -273,8 +263,6 @@ def compile_and_get_diagnostics(
         end_col = output.get("end_col_offset", start_col + 1)
     else:
         start_line, start_col = parse_error_location(message)
-        if start_line == 0 and start_col == 0:
-            start_line, start_col = parse_error_location(traceback_str)
         end_line = start_line
         end_col = start_col + 1
 
