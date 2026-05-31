@@ -40,7 +40,7 @@ from serpent_lsp.parser import _VERSION_PATTERN
 _PARSE_DEBOUNCE_DELAY = 0.3
 
 # Debounce delay for compilation diagnostics (seconds)
-_DIAGNOSTICS_DEBOUNCE_DELAY = 1.0
+_DIAGNOSTICS_DEBOUNCE_DELAY = 0.3
 
 
 class SerpentLanguageServer(LanguageServer):
