@@ -7,9 +7,8 @@ description = "Vyper language support for Zed — pre-compiled tree-sitter gramm
 repository = "https://github.com/Olyno/serpent"
 
 [grammars.vyper]
-repository = "https://github.com/Olyno/serpent"
-rev = "a22c1c74122f13253ffd0b28ba2099fb8f6606d7"
-path = "grammars/tree-sitter-vyper"
+repository = "https://github.com/Olyno/tree-sitter-vyper"
+rev = "master"
 
 [language_servers.vyper]
 name = "Serpent LSP"

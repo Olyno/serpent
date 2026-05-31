@@ -1,22 +1,16 @@
-; Code outline symbols for Vyper in Zed
+; Zed outline for Vyper
 
-(function_def
+(function_definition
   name: (identifier) @name) @item
 
-(struct_def
+(struct_definition
   name: (identifier) @name) @item
 
-(enum_def
+(event_definition
   name: (identifier) @name) @item
 
-(flag_def
+(enum_definition
   name: (identifier) @name) @item
 
-(event_def
-  name: (identifier) @name) @item
-
-(interface_def
-  name: (identifier) @name) @item
-
-(constant_def
+(interface_definition
   name: (identifier) @name) @item
