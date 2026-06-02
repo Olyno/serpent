@@ -152,6 +152,22 @@ The grammar is fetched from `https://github.com/Olyno/tree-sitter-vyper`.
 If highlighting doesn't work, Zed may need to rebuild the grammar.
 Restart Zed or run `zed: reload` from the command palette.
 
+## Build (WebAssembly)
+
+The LSP integration requires compiling the Rust sidecar to WebAssembly:
+
+```bash
+# One-time: install the WASM target
+rustup target add wasm32-wasip1
+
+# Build
+cd extensions/zed
+cargo build --release --target wasm32-wasip1
+cp target/wasm32-wasip1/release/serpent_vyper.wasm extension.wasm
+```
+
+Repeat the build step whenever `src/lib.rs` or `Cargo.toml` changes.
+
 ## Development
 
 Extension structure:
@@ -159,10 +175,18 @@ Extension structure:
 ```
 extensions/zed/
 ├── extension.toml          # Extension manifest
-├── languages/vyper/        # Tree-sitter queries (highlights, indents, outline)
-│   ├── highlights.scm
-│   ├── indents.scm
-│   └── outline.scm
+├── extension.wasm          # Compiled WASM (Rust → WASM, LSP sidecar)
+├── Cargo.toml              # Rust crate manifest
+├── src/
+│   └── lib.rs              # LSP launcher (flatpak detection, PATH resolution)
+├── snippets/
+│   └── vyper.json          # Vyper snippets (24 snippets: struct, event, function, etc.)
+├── languages/vyper/
+│   ├── config.toml         # Language metadata (name, suffixes, indentation)
+│   ├── brackets.scm        # Bracket matching queries
+│   ├── highlights.scm      # Syntax highlighting (from tree-sitter-vyper)
+│   ├── indents.scm         # Auto-indentation rules
+│   └── outline.scm         # Document outline (symbols)
 └── grammars/vyper/         # Tree-sitter grammar (fetched from GitHub)
     └── ...
 ```
