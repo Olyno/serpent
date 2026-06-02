@@ -149,8 +149,9 @@ If you need to override the LSP binary, add this to `~/.config/zed/settings.json
 ### Grammar not loading
 
 The grammar is fetched from `https://github.com/Olyno/tree-sitter-vyper`.
-If highlighting doesn't work, Zed may need to rebuild the grammar.
-Restart Zed or run `zed: reload` from the command palette.
+The exact revision is pinned in `extension.toml`. If highlighting doesn't work,
+Zed may need to rebuild the grammar. Restart Zed or run `zed: reload` from the
+command palette.
 
 ## Build (WebAssembly)
 
@@ -166,7 +167,8 @@ cargo build --release --target wasm32-wasip1
 cp target/wasm32-wasip1/release/serpent_vyper.wasm extension.wasm
 ```
 
-Repeat the build step whenever `src/lib.rs` or `Cargo.toml` changes.
+`extension.wasm` is generated locally and ignored by git. Repeat the build step
+whenever `src/lib.rs` or `Cargo.toml` changes.
 
 ## Development
 
@@ -175,7 +177,6 @@ Extension structure:
 ```
 extensions/zed/
 ├── extension.toml          # Extension manifest
-├── extension.wasm          # Compiled WASM (Rust → WASM, LSP sidecar)
 ├── Cargo.toml              # Rust crate manifest
 ├── src/
 │   └── lib.rs              # LSP launcher (flatpak detection, PATH resolution)

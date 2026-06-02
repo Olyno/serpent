@@ -31,8 +31,6 @@ _tree_sitter_vyper/
 
 # WASM précompilé (généré par tree-sitter build)
 *.wasm
-# Exception: Zed extension WASM (Rust sidecar, manually built)
-!extensions/zed/extension.wasm
 
 # Secrets
 .env

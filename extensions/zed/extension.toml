@@ -8,7 +8,7 @@ repository = "https://github.com/Olyno/serpent"
 
 [grammars.vyper]
 repository = "https://github.com/Olyno/tree-sitter-vyper"
-rev = "v0.1.1"
+rev = "0.1.1"
 
 [language_servers.vyper]
 name = "Serpent LSP"
