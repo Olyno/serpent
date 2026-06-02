@@ -50,13 +50,47 @@ def _get_compile_script(
         return dedent(
             f"""
             import json
+            import re
             import sys
+
+            def _parse_vyper_exception_list(exc):
+                text = str(exc)
+                if not text.startswith("Compilation failed with the following errors:"):
+                    return None
+
+                errors = []
+                matches = list(re.finditer(r"(?m)^([A-Za-z_][A-Za-z0-9_]*): ", text))
+                for index, match in enumerate(matches):
+                    start = match.start()
+                    end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+                    block = text[start:end]
+                    line_match = re.search(r"line\\s+(\\d+):(\\d*)", block)
+                    if line_match is None:
+                        continue
+
+                    errors.append({{
+                        "message": block[match.end() - start:],
+                        "error_type": match.group(1),
+                        "lineno": int(line_match.group(1)),
+                        "col_offset": int(line_match.group(2) or 0),
+                    }})
+
+                return errors or None
             
             try:
                 from vyper import compile_code
                 compile_code({json.dumps(source)})
                 print(json.dumps({{\"success\": True}}))
             except Exception as e:
+                parsed_errors = _parse_vyper_exception_list(e)
+                if parsed_errors is not None:
+                    print(json.dumps({{
+                        "success": False,
+                        "error_type": type(e).__name__,
+                        "errors": parsed_errors
+                    }}))
+                    sys.exit(0)
+
                 error_info = {{
                     \"success\": False,
                     \"error_type\": type(e).__name__,
@@ -76,8 +110,33 @@ def _get_compile_script(
     # Version >= 0.4.0 : stops at annotated AST (semantic analysis)
     _template = """\
 import json
+import re
 import sys
 from pathlib import Path
+
+def _parse_vyper_exception_list(exc):
+    text = str(exc)
+    if not text.startswith("Compilation failed with the following errors:"):
+        return None
+
+    errors = []
+    matches = list(re.finditer(r"(?m)^([A-Za-z_][A-Za-z0-9_]*): ", text))
+    for index, match in enumerate(matches):
+        start = match.start()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        block = text[start:end]
+        line_match = re.search(r"line\\s+(\\d+):(\\d*)", block)
+        if line_match is None:
+            continue
+
+        errors.append({{
+            "message": block[match.end() - start:],
+            "error_type": match.group(1),
+            "lineno": int(line_match.group(1)),
+            "col_offset": int(line_match.group(2) or 0),
+        }})
+
+    return errors or None
 
 try:
     from vyper.compiler import CompilerData
@@ -91,6 +150,16 @@ try:
     print(json.dumps({{"success": True}}))
 except Exception as e:
     from vyper.exceptions import VyperException
+
+    parsed_errors = _parse_vyper_exception_list(e)
+    if parsed_errors is not None:
+        print(json.dumps({{
+            "success": False,
+            "error_type": type(e).__name__,
+            "errors": parsed_errors
+        }}))
+        sys.exit(0)
+
     if isinstance(e, VyperException) and hasattr(e, '_vyper_errors'):
         errors = []
         for err in e._vyper_errors:
@@ -111,6 +180,7 @@ except Exception as e:
             "errors": errors
         }}))
         sys.exit(0)
+
     error_info = {{
         "success": False,
         "error_type": type(e).__name__,
