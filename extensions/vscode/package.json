@@ -49,8 +49,8 @@
                 ],
                 "configuration": "./language-configuration.json",
                 "icon": {
-                    "light": "images/icon.png",
-                    "dark": "images/icon.png"
+                    "light": "images/files_icon.png",
+                    "dark": "images/files_icon.png"
                 }
             }
         ],
