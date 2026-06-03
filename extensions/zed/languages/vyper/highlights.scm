@@ -104,7 +104,6 @@
 (event_definition name: (identifier) @type)
 (enum_definition name: (identifier) @type)
 (interface_definition name: (identifier) @type)
-(flag_definition name: (identifier) @type)
 
 ; ===== FUNCTIONS =====
 (function_definition name: (identifier) @function)
