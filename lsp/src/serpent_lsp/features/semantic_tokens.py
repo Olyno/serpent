@@ -62,7 +62,6 @@ TOKEN_MODIFIERS = [
     "async",
     "modification",
     "documentation",
-    "defaultLibrary",
 ]
 
 

@@ -61,6 +61,35 @@
                 "path": "./syntaxes/vyper.tmLanguage.json"
             }
         ],
+        "semanticTokenScopes": [
+            {
+                "language": "vyper",
+                "scopes": {
+                    "function.declaration": ["entity.name.function.vyper"],
+                    "function": ["entity.name.function.vyper", "support.function.vyper"],
+                    "variable.declaration": ["variable.other.vyper"],
+                    "variable.static": ["variable.other.constant.vyper"],
+                    "variable.readonly": ["variable.language.vyper"],
+                    "variable": ["variable.other.vyper"],
+                    "parameter": ["variable.parameter.vyper"],
+                    "type": ["support.type.vyper", "support.type.primitive.vyper"],
+                    "class": ["entity.name.type.vyper"],
+                    "struct": ["entity.name.type.struct.vyper"],
+                    "enum": ["entity.name.type.enum.vyper"],
+                    "interface": ["entity.name.type.interface.vyper"],
+                    "event": ["entity.name.type.event.vyper"],
+                    "decorator.declaration": ["entity.name.function.decorator.vyper"],
+                    "decorator": ["storage.modifier.decorator.vyper", "entity.name.function.decorator.vyper"],
+                    "property": ["variable.other.member.vyper"],
+                    "keyword": ["keyword.control.vyper"],
+                    "modifier": ["storage.modifier.vyper"],
+                    "string": ["string.quoted.double.vyper", "string.quoted.single.vyper"],
+                    "number": ["constant.numeric.vyper"],
+                    "comment": ["comment.line.number-sign.vyper"],
+                    "operator": ["keyword.operator.vyper"]
+                }
+            }
+        ],
         "snippets": [
             {
                 "language": "vyper",

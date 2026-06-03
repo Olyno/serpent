@@ -66,7 +66,7 @@
         "decorators": {
             "patterns": [
                 {
-                    "name": "entity.name.function.decorator.vyper",
+                    "name": "storage.modifier.decorator.vyper entity.name.function.decorator.vyper",
                     "match": "@[a-zA-Z_]\\w*"
                 }
             ]
@@ -76,7 +76,7 @@
             "begin": "\\b(def)\\s+([a-zA-Z_]\\w*)\\s*(\\()",
             "end": "(?=^\\s*\\S|^\\s*$)",
             "beginCaptures": {
-                "1": { "name": "keyword.control.vyper" },
+                "1": { "name": "keyword.function.vyper keyword.control.vyper" },
                 "2": { "name": "entity.name.function.vyper" },
                 "3": { "name": "punctuation.section.parens.begin.vyper" }
             },
@@ -92,7 +92,7 @@
             "begin": "\\b(interface)\\s+([a-zA-Z_]\\w*)",
             "end": "(?=^\\s*\\S|^\\s*$)",
             "beginCaptures": {
-                "1": { "name": "storage.type.vyper" },
+                "1": { "name": "keyword.storage.type.vyper storage.type.vyper" },
                 "2": { "name": "entity.name.type.vyper" }
             },
             "patterns": [
@@ -104,7 +104,7 @@
             "begin": "\\b(struct)\\s+([a-zA-Z_]\\w*)",
             "end": "(?=^\\s*\\S|^\\s*$)",
             "beginCaptures": {
-                "1": { "name": "storage.type.vyper" },
+                "1": { "name": "keyword.storage.type.vyper storage.type.vyper" },
                 "2": { "name": "entity.name.type.vyper" }
             },
             "patterns": [
@@ -117,7 +117,7 @@
             "begin": "\\b(event)\\s+([a-zA-Z_]\\w*)",
             "end": "(?=^\\s*\\S|^\\s*$)",
             "beginCaptures": {
-                "1": { "name": "storage.type.vyper" },
+                "1": { "name": "keyword.storage.type.vyper storage.type.vyper" },
                 "2": { "name": "entity.name.type.vyper" }
             },
             "patterns": [
@@ -156,7 +156,7 @@
                 "1": { "name": "variable.other.vyper" },
                 "2": { "name": "storage.modifier.vyper" },
                 "3": { "name": "punctuation.section.parens.vyper" },
-                "4": { "name": "support.type.vyper" },
+                "4": { "name": "support.type.primitive.vyper support.type.vyper" },
                 "5": { "name": "keyword.operator.assignment.vyper" }
             }
         },
@@ -166,7 +166,7 @@
             "captures": {
                 "1": { "name": "variable.other.constant.vyper" },
                 "2": { "name": "storage.modifier.vyper" },
-                "3": { "name": "support.type.vyper" }
+                "3": { "name": "support.type.primitive.vyper support.type.vyper" }
             }
         },
         "parameters": {
@@ -188,8 +188,8 @@
         "return-type": {
             "match": "->\\s*([a-zA-Z_]\\w*)",
             "captures": {
-                "0": { "name": "keyword.operator.arrow.vyper" },
-                "1": { "name": "support.type.vyper" }
+                "0": { "name": "punctuation.separator.arrow.vyper keyword.operator.arrow.vyper" },
+                "1": { "name": "support.type.primitive.vyper support.type.vyper" }
             }
         },
         "type-annotations": {
@@ -201,11 +201,31 @@
         "keywords": {
             "patterns": [
                 {
-                    "name": "keyword.control.vyper",
-                    "match": "\\b(def|if|elif|else|for|in|return|raise|assert|pass|break|continue|not|and|or|range|log|is)\\b"
+                    "name": "keyword.control.conditional.vyper keyword.control.vyper",
+                    "match": "\\b(if|elif|else)\\b"
                 },
                 {
-                    "name": "storage.type.vyper",
+                    "name": "keyword.control.repeat.vyper keyword.control.vyper",
+                    "match": "\\b(for|range)\\b"
+                },
+                {
+                    "name": "keyword.control.return.vyper keyword.control.vyper",
+                    "match": "\\b(return)\\b"
+                },
+                {
+                    "name": "keyword.control.exception.vyper keyword.control.vyper",
+                    "match": "\\b(raise|assert)\\b"
+                },
+                {
+                    "name": "keyword.control.import.vyper keyword.control.vyper",
+                    "match": "\\b(import|from|as|uses|implements|initializes|exports)\\b"
+                },
+                {
+                    "name": "keyword.control.vyper",
+                    "match": "\\b(def|in|pass|break|continue|not|and|or|log|is)\\b"
+                },
+                {
+                    "name": "keyword.storage.type.vyper storage.type.vyper",
                     "match": "\\b(struct|enum|flag|event|interface)\\b"
                 },
                 {
@@ -217,7 +237,7 @@
         "builtins": {
             "patterns": [
                 {
-                    "name": "support.function.vyper",
+                    "name": "support.function.builtin.vyper support.function.vyper",
                     "match": "\\b(empty|convert|slice|concat|len|keccak256|sha256|ecrecover|ecadd|ecmul|extract32|uint2str|as_wei_value|as_unitless_number|create_minimal_proxy_to|create_copy_of|create_from_blueprint|raw_call|raw_log|raw_revert|raw_create|selfdestruct|send|shift|abs|ceil|epsilon|floor|max|max_value|min|min_value|pow_mod256|sqrt|isqrt|uint256_addmod|uint256_mulmod|unsafe_add|unsafe_sub|unsafe_mul|unsafe_div|print|abi_decode|abi_encode|method_id|clear|pop|append)\\b"
                 }
             ]
