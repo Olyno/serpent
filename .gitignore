@@ -31,6 +31,7 @@ _tree_sitter_vyper/
 
 # WASM précompilé (généré par tree-sitter build)
 *.wasm
+!extensions/zed/extension.wasm
 
 # Secrets
 .env
