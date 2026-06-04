@@ -252,7 +252,7 @@ def infer_symbol_kind(node: BaseNode) -> SymbolKind:
         return SymbolKind.Variable
 
     if isinstance(node, nodes.arg):
-        return SymbolKind.Variable
+        return SymbolKind.Parameter
 
     if isinstance(node, nodes.FlagDef):
         return SymbolKind.Enum

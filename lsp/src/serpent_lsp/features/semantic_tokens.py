@@ -198,27 +198,12 @@ def compute_semantic_tokens(
                 else:
                     encoder.add(t_line, t_col, len(ident), "variable", _make_modifier("declaration", "static"))
 
-        # Name references → variable or parameter
-        if isinstance(node, Name):
-            ident = node.id
-            line = node.lineno - 1 if node.lineno else 0
-            col = node.col_offset if node.col_offset else 0
-            if ident in parameters:
-                encoder.add(line, col, len(ident), "parameter")
-            elif ident not in {
-                "self", "msg", "block", "tx", "chain",
-                "True", "False", "None",
-                "def", "if", "elif", "else", "for", "return",
-                "raise", "assert", "pass", "break", "continue",
-                "in", "and", "or", "not", "range", "log",
-                "struct", "enum", "flag", "event", "interface",
-                "public", "constant", "immutable", "indexed",
-                "nonpayable", "nonreentrant", "transient",
-                "payable", "external", "internal",
-                "bool", "address", "decimal", "String", "Bytes",
-                "HashMap", "DynArray", "uint256", "int128",
-            } and not ident.startswith("__"):
-                encoder.add(line, col, len(ident), "variable")
+        # Name references — intentionally skipped.
+        # We let TextMate handle variable/parameter coloring to avoid
+        # semantic tokens overriding TextMate colors when the theme does
+        # not define colors for the standard 'parameter'/'variable' tokens.
+        # The LSP only highlights definitions (functions, types, state vars)
+        # where semantic tokens add real value.
 
     data = encoder.build()
     if not data:

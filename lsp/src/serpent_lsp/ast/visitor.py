@@ -97,7 +97,7 @@ class VyperAstVisitor:
                 arg_entry = SymbolEntry(
                     name=arg_node.arg,
                     node=arg_node,
-                    kind=SymbolKind.Variable,
+                    kind=SymbolKind.Parameter,
                     scope=node.name,
                     access_patterns=[([arg_node.arg], False)],
                     parent_function=node,
