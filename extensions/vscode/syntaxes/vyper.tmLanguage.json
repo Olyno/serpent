@@ -66,7 +66,7 @@
         "decorators": {
             "patterns": [
                 {
-                    "name": "storage.modifier.decorator.vyper entity.name.function.decorator.vyper",
+                    "name": "entity.name.function.decorator.vyper",
                     "match": "@[a-zA-Z_]\\w*"
                 }
             ]
@@ -172,8 +172,10 @@
         "parameters": {
             "patterns": [
                 {
-                    "name": "variable.parameter.vyper",
-                    "match": "([a-zA-Z_]\\w*)\\s*:\\s*"
+                    "match": "([a-zA-Z_]\\w*)\\s*:\\s*",
+                    "captures": {
+                        "1": { "name": "variable.parameter.vyper" }
+                    }
                 },
                 {
                     "name": "punctuation.separator.parameter.vyper",
@@ -238,15 +240,19 @@
             "patterns": [
                 {
                     "name": "support.function.builtin.vyper support.function.vyper",
-                    "match": "\\b(empty|convert|slice|concat|len|keccak256|sha256|ecrecover|ecadd|ecmul|extract32|uint2str|as_wei_value|as_unitless_number|create_minimal_proxy_to|create_copy_of|create_from_blueprint|raw_call|raw_log|raw_revert|raw_create|selfdestruct|send|shift|abs|ceil|epsilon|floor|max|max_value|min|min_value|pow_mod256|sqrt|isqrt|uint256_addmod|uint256_mulmod|unsafe_add|unsafe_sub|unsafe_mul|unsafe_div|print|abi_decode|abi_encode|method_id|clear|pop|append)\\b"
+                    "match": "\\b(empty|convert|slice|concat|len|keccak256|sha256|ecrecover|ecadd|ecmul|extract32|uint2str|as_wei_value|create_minimal_proxy_to|create_copy_of|create_from_blueprint|raw_call|raw_log|raw_revert|raw_create|selfdestruct|send|shift|abs|ceil|epsilon|floor|max|max_value|min|min_value|pow_mod256|sqrt|isqrt|uint256_addmod|uint256_mulmod|unsafe_add|unsafe_sub|unsafe_mul|unsafe_div|abi_decode|abi_encode|method_id|print|blockhash|blobhash|pop|append)\\b"
                 }
             ]
         },
         "special-vars": {
             "patterns": [
                 {
+                    "name": "variable.language.self.vyper variable.language.vyper",
+                    "match": "\\b(self)\\b"
+                },
+                {
                     "name": "variable.language.vyper",
-                    "match": "\\b(self|msg|block|tx|chain)\\b"
+                    "match": "\\b(msg|block|tx|chain)\\b"
                 }
             ]
         },
