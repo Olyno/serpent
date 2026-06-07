@@ -1,5 +1,5 @@
 {
-    "name": "serpent-vscode",
+    "name": "serpent-vyper-vscode",
     "displayName": "Serpent - Vyper Language Support",
     "description": "Vyper language support for Visual Studio Code — LSP, snippets, syntax highlighting, compilation",
     "version": "0.1.0",
