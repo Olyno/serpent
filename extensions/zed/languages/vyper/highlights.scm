@@ -112,8 +112,8 @@
 
 ; ===== DECORATORS =====
 (decorator) @attribute
-((decorator (identifier) @attribute)
-  (#match? @attribute "^(external|internal|public|private|view|pure|payable|nonpayable|nonreentrant|deploy|constant|immutable|transient|indexed)$"))
+((decorator (identifier) @keyword)
+  (#match? @keyword "^(external|internal|public|private|view|pure|payable|nonpayable|nonreentrant|deploy|constant|immutable|transient|indexed)$"))
 
 ; ===== TYPES =====
 (type (identifier) @type)
@@ -123,8 +123,24 @@
 ((identifier) @variable.builtin
   (#match? @variable.builtin "^(self|msg|block|tx|chain)$"))
 
+((identifier) @keyword
+  (#match? @keyword "^(self)$"))
+
+; ===== PARAMETERS =====
+(parameters (identifier) @parameter @variable.builtin)
+(typed_parameter (identifier) @parameter @variable.builtin)
+(default_parameter name: (identifier) @parameter @variable.builtin)
+(typed_default_parameter name: (identifier) @parameter @variable.builtin)
+
+; ===== STORAGE MODIFIERS =====
+((call
+  function: (identifier) @keyword
+  arguments: (argument_list (identifier) @type))
+  (#match? @keyword "^(public|constant|immutable|transient)$"))
+
 ; ===== FUNCTION CALLS =====
-(call function: (identifier) @function)
+(call function: (identifier) @function
+  (#not-match? @function "^(public|constant|immutable|transient)$"))
 (call function: (attribute attribute: (identifier) @function))
 
 ; Built-in functions
@@ -136,4 +152,4 @@
 
 ; ===== TYPE PRIMITIVES =====
 ((identifier) @type.builtin
-  (#match? @type.builtin "^(bool|address|decimal|String|Bytes|HashMap|DynArray|uint256|int128|int256|uint8|uint16|uint32|uint64|uint128|bytes32|bytes4|bytes8|bytes16|bytes64)$"))
+  (#match? @type.builtin "^(bool|address|decimal|String|Bytes|HashMap|DynArray|(u?int)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)|bytes([1-9]|[12][0-9]|3[0-2]))$"))
