@@ -129,6 +129,16 @@
                     "default": true,
                     "description": "Enable/disable the Language Server Protocol (completion, diagnostics, navigation)."
                 },
+                "serpent.lsp.semanticTokens.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable LSP semantic tokens for symbol-aware highlighting such as parameter usages."
+                },
+                "serpent.syntax.treeSitterSemanticTokens.enabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable experimental Tree-sitter semantic tokens in VSCode. Disabled by default because semantic tokens override TextMate scopes."
+                },
                 "serpent.compile.onSave": {
                     "type": "boolean",
                     "default": true,

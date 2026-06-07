@@ -8,7 +8,9 @@
 import { type ExtensionContext, languages, window } from 'vscode';
 import { EXTENSION_NAMESPACE, LANGUAGE_ID, LSP_SERVER_NAME } from './common/constants.js';
 import { createLogger, logInfo } from './common/logging.js';
-import { initTreeSitter, disposeTreeSitter, TREESITTER_LEGEND } from './common/treesitter.js';
+import { createParameterSemanticTokensProvider, VYPER_PARAMETER_LEGEND } from './common/parameterTokens.js';
+import { getExtensionSettings } from './common/settings.js';
+import { disposeTreeSitter, initTreeSitter, TREESITTER_LEGEND } from './common/treesitter.js';
 import { registerCommand } from './common/vscodeapi.js';
 
 /**
@@ -20,20 +22,35 @@ export async function activate(context: ExtensionContext): Promise<void> {
     context.subscriptions.push(outputChannel);
     logInfo(`Extension ${EXTENSION_NAMESPACE} activated (web)`);
 
-    // Initialize tree-sitter for richer syntax highlighting (works in web too)
-    const tsProvider = await initTreeSitter(context);
-    if (tsProvider) {
-        context.subscriptions.push(
-            languages.registerDocumentSemanticTokensProvider(
-                { language: LANGUAGE_ID },
-                tsProvider,
-                TREESITTER_LEGEND,
-            ),
-        );
-        logInfo('Tree-sitter highlighting enabled (web)');
+    // TextMate is the default syntax highlighter. Tree-sitter semantic tokens
+    // remain opt-in because they override TextMate scopes in VSCode themes.
+    const settings = getExtensionSettings();
+    if (settings.treeSitterSemanticTokensEnabled) {
+        const tsProvider = await initTreeSitter(context);
+        if (tsProvider) {
+            context.subscriptions.push(
+                languages.registerDocumentSemanticTokensProvider(
+                    { language: LANGUAGE_ID },
+                    tsProvider,
+                    TREESITTER_LEGEND,
+                ),
+            );
+            logInfo('Tree-sitter semantic tokens enabled (web)');
+        } else {
+            logInfo('Tree-sitter not available — using TextMate grammar only');
+        }
     } else {
-        logInfo('Tree-sitter not available — using TextMate grammar only');
+        logInfo('Using TextMate syntax highlighting (web)');
     }
+
+    context.subscriptions.push(
+        languages.registerDocumentSemanticTokensProvider(
+            { language: LANGUAGE_ID },
+            createParameterSemanticTokensProvider(),
+            VYPER_PARAMETER_LEGEND,
+        ),
+    );
+    logInfo('Parameter semantic tokens enabled (web)');
 
     // Register compile command (warning only)
     context.subscriptions.push(

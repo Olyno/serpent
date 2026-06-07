@@ -8,18 +8,18 @@
  * Web: reads WASM via vscode.workspace.fs from extension URI
  */
 
-import * as TreeSitter from 'web-tree-sitter';
 import {
     type DocumentSemanticTokensProvider,
     type ExtensionContext,
     type ProviderResult,
     type SemanticTokens,
-    type SemanticTokensLegend,
     SemanticTokensBuilder,
+    type SemanticTokensLegend,
     type TextDocument,
     Uri,
     workspace,
 } from 'vscode';
+import * as TreeSitter from 'web-tree-sitter';
 
 import { LANGUAGE_ID } from './constants.js';
 
@@ -28,21 +28,23 @@ import { LANGUAGE_ID } from './constants.js';
 // ---------------------------------------------------------------------------
 
 const tokenTypesLegend: string[] = [
-    'variable',  // 0
-    'function',  // 1
-    'keyword',   // 2
-    'comment',   // 3
-    'string',    // 4
-    'number',    // 5
-    'operator',  // 6
-    'type',      // 7
-    'property',  // 8
+    'variable', // 0
+    'function', // 1
+    'keyword', // 2
+    'comment', // 3
+    'string', // 4
+    'number', // 5
+    'operator', // 6
+    'type', // 7
+    'property', // 8
     'namespace', // 9
+    'parameter', // 10
+    'decorator', // 11
 ];
 
 const tokenModifiersLegend: string[] = [
-    'declaration',    // 0
-    'readonly',       // 1
+    'declaration', // 0
+    'readonly', // 1
     'defaultLibrary', // 2
 ];
 
@@ -54,28 +56,52 @@ export const TREESITTER_LEGEND: SemanticTokensLegend = {
 
 /** Map tree-sitter capture names to VSCode token type indices */
 const CAPTURE_TO_TOKEN_TYPE: Record<string, number> = {
-    'variable': 0,
-    'function': 1,
+    variable: 0,
+    'variable.builtin': 0,
+    parameter: 10,
+    'variable.parameter': 10,
+    function: 1,
     'function.method': 1,
     'function.builtin': 1,
-    'keyword': 2,
-    'comment': 3,
-    'string': 4,
-    'number': 5,
-    'operator': 6,
-    'type': 7,
-    'constructor': 7,
-    'property': 8,
-    'namespace': 9,
-    'constant': 0,
+    keyword: 2,
+    'keyword.modifier': 2,
+    comment: 3,
+    string: 4,
+    number: 5,
+    operator: 6,
+    type: 7,
+    'type.builtin': 7,
+    constructor: 7,
+    property: 8,
+    namespace: 9,
+    constant: 0,
     'constant.builtin': 0,
+    attribute: 11,
+    'attribute.builtin': 11,
+};
+
+const CAPTURE_PRIORITY: Record<string, number> = {
+    variable: 0,
+    constant: 1,
+    'keyword.modifier': 2,
+    attribute: 2,
+    'attribute.builtin': 2,
+    'variable.builtin': 2,
+    parameter: 2,
+    'variable.parameter': 2,
+    type: 2,
+    'type.builtin': 3,
 };
 
 /** Modifiers for specific captures */
 const CAPTURE_TO_MODIFIERS: Record<string, number> = {
-    'constructor': (1 << 0),                      // declaration
-    'constant': (1 << 1),                         // readonly
-    'constant.builtin': (1 << 1) | (1 << 2),     // readonly + defaultLibrary
+    constructor: 1 << 0, // declaration
+    constant: 1 << 1, // readonly
+    'constant.builtin': (1 << 1) | (1 << 2), // readonly + defaultLibrary
+    'function.builtin': 1 << 2, // defaultLibrary
+    'type.builtin': 1 << 2, // defaultLibrary
+    'variable.builtin': 1 << 2, // defaultLibrary
+    'attribute.builtin': 1 << 2, // defaultLibrary
 };
 
 // ---------------------------------------------------------------------------
@@ -188,6 +214,10 @@ async function buildSemanticTokens(document: TextDocument): Promise<SemanticToke
 
     try {
         const captures = highlightsQuery.captures(tree.rootNode);
+        const tokens = new Map<
+            string,
+            { line: number; startChar: number; length: number; typeIndex: number; modifiers: number; priority: number }
+        >();
 
         for (const capture of captures) {
             const typeIndex = CAPTURE_TO_TOKEN_TYPE[capture.name];
@@ -204,8 +234,19 @@ async function buildSemanticTokens(document: TextDocument): Promise<SemanticToke
             if (endPosition.row !== line) continue;
 
             const modifiers = CAPTURE_TO_MODIFIERS[capture.name] ?? 0;
+            const priority = CAPTURE_PRIORITY[capture.name] ?? 1;
+            const key = `${line}:${startChar}:${length}`;
+            const previous = tokens.get(key);
 
-            builder.push(line, startChar, length, typeIndex, modifiers);
+            if (!previous || priority >= previous.priority) {
+                tokens.set(key, { line, startChar, length, typeIndex, modifiers, priority });
+            }
+        }
+
+        for (const token of [...tokens.values()].sort(
+            (a, b) => a.line - b.line || a.startChar - b.startChar || a.length - b.length,
+        )) {
+            builder.push(token.line, token.startChar, token.length, token.typeIndex, token.modifiers);
         }
     } finally {
         tree.delete();
@@ -219,9 +260,7 @@ async function buildSemanticTokens(document: TextDocument): Promise<SemanticToke
  */
 function createProvider(): DocumentSemanticTokensProvider {
     return {
-        provideDocumentSemanticTokens(
-            document: TextDocument,
-        ): ProviderResult<SemanticTokens> {
+        provideDocumentSemanticTokens(document: TextDocument): ProviderResult<SemanticTokens> {
             if (document.languageId !== LANGUAGE_ID) return null;
             return buildSemanticTokens(document);
         },
@@ -239,9 +278,7 @@ function createProvider(): DocumentSemanticTokensProvider {
  * Tree-sitter is optional — if initialization fails, the extension still works
  * with its TextMate grammar.
  */
-export async function initTreeSitter(
-    context: ExtensionContext,
-): Promise<DocumentSemanticTokensProvider | undefined> {
+export async function initTreeSitter(context: ExtensionContext): Promise<DocumentSemanticTokensProvider | undefined> {
     try {
         await ensureInitialized(context);
         return createProvider();

@@ -24,6 +24,8 @@ export const COMMAND_INSTALL_FORMATTER = `${EXTENSION_NAMESPACE}.installFormatte
 
 /** Configuration keys */
 export const CONFIG_LSP_ENABLED = 'lsp.enabled';
+export const CONFIG_LSP_SEMANTIC_TOKENS_ENABLED = 'lsp.semanticTokens.enabled';
+export const CONFIG_TREE_SITTER_SEMANTIC_TOKENS_ENABLED = 'syntax.treeSitterSemanticTokens.enabled';
 export const CONFIG_COMPILE_ON_SAVE = 'compile.onSave';
 export const CONFIG_COMPILE_COMMAND = 'compile.command';
 export const CONFIG_PYTHON_INTERPRETER = 'python.interpreter';

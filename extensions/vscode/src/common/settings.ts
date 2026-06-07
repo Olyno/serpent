@@ -8,8 +8,10 @@ import {
     CONFIG_COMPILE_COMMAND,
     CONFIG_COMPILE_ON_SAVE,
     CONFIG_LSP_ENABLED,
+    CONFIG_LSP_SEMANTIC_TOKENS_ENABLED,
     CONFIG_LSP_SERVER_PATH,
     CONFIG_PYTHON_INTERPRETER,
+    CONFIG_TREE_SITTER_SEMANTIC_TOKENS_ENABLED,
     EXTENSION_NAMESPACE,
 } from './constants.js';
 import { getConfiguration } from './vscodeapi.js';
@@ -18,6 +20,10 @@ import { getConfiguration } from './vscodeapi.js';
 export interface ExtensionSettings {
     /** Whether the LSP server is enabled */
     lspEnabled: boolean;
+    /** Whether LSP semantic tokens are enabled */
+    lspSemanticTokensEnabled: boolean;
+    /** Whether Tree-sitter semantic tokens are enabled in VSCode */
+    treeSitterSemanticTokensEnabled: boolean;
     /** Compile automatically on save */
     compileOnSave: boolean;
     /** Shell command to invoke vyper */
@@ -33,6 +39,8 @@ export function getExtensionSettings(scope?: ConfigurationScope): ExtensionSetti
     const config = getConfiguration(EXTENSION_NAMESPACE, scope);
     return {
         lspEnabled: readConfig<boolean>(config, CONFIG_LSP_ENABLED, true),
+        lspSemanticTokensEnabled: readConfig<boolean>(config, CONFIG_LSP_SEMANTIC_TOKENS_ENABLED, false),
+        treeSitterSemanticTokensEnabled: readConfig<boolean>(config, CONFIG_TREE_SITTER_SEMANTIC_TOKENS_ENABLED, false),
         compileOnSave: readConfig<boolean>(config, CONFIG_COMPILE_ON_SAVE, true),
         compileCommand: readConfig<string>(config, CONFIG_COMPILE_COMMAND, 'vyper'),
         pythonInterpreter: readConfig<string[]>(config, CONFIG_PYTHON_INTERPRETER, []),
@@ -44,6 +52,8 @@ export function getExtensionSettings(scope?: ConfigurationScope): ExtensionSetti
 export function checkIfConfigurationChanged(event: { affectsConfiguration: (section: string) => boolean }): boolean {
     const monitoredKeys = [
         `${EXTENSION_NAMESPACE}.${CONFIG_LSP_ENABLED}`,
+        `${EXTENSION_NAMESPACE}.${CONFIG_LSP_SEMANTIC_TOKENS_ENABLED}`,
+        `${EXTENSION_NAMESPACE}.${CONFIG_TREE_SITTER_SEMANTIC_TOKENS_ENABLED}`,
         `${EXTENSION_NAMESPACE}.${CONFIG_COMPILE_ON_SAVE}`,
         `${EXTENSION_NAMESPACE}.${CONFIG_COMPILE_COMMAND}`,
         `${EXTENSION_NAMESPACE}.${CONFIG_PYTHON_INTERPRETER}`,

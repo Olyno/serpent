@@ -16,9 +16,10 @@ import {
     LSP_SERVER_NAME,
 } from './common/constants.js';
 import { createLogger, logError, logInfo } from './common/logging.js';
+import { createParameterSemanticTokensProvider, VYPER_PARAMETER_LEGEND } from './common/parameterTokens.js';
 import { startLspClient, stopLspClient } from './common/server.js';
 import { checkIfConfigurationChanged, getExtensionSettings } from './common/settings.js';
-import { initTreeSitter, disposeTreeSitter, TREESITTER_LEGEND } from './common/treesitter.js';
+import { disposeTreeSitter, initTreeSitter, TREESITTER_LEGEND } from './common/treesitter.js';
 import { isCompilableVyperFile } from './common/utilities.js';
 import { registerCommand } from './common/vscodeapi.js';
 
@@ -34,23 +35,38 @@ export async function activate(context: ExtensionContext): Promise<void> {
     context.subscriptions.push(outputChannel);
     logInfo('Serpent extension activated');
 
-    // Initialize tree-sitter for richer syntax highlighting
-    const tsProvider = await initTreeSitter(context);
-    if (tsProvider) {
-        context.subscriptions.push(
-            languages.registerDocumentSemanticTokensProvider(
-                { language: LANGUAGE_ID },
-                tsProvider,
-                TREESITTER_LEGEND,
-            ),
-        );
-        logInfo('Tree-sitter highlighting enabled');
+    const settings = getExtensionSettings();
+
+    // TextMate is the default syntax highlighter. Tree-sitter semantic tokens
+    // remain opt-in because they override TextMate scopes in VSCode themes.
+    if (settings.treeSitterSemanticTokensEnabled) {
+        const tsProvider = await initTreeSitter(context);
+        if (tsProvider) {
+            context.subscriptions.push(
+                languages.registerDocumentSemanticTokensProvider(
+                    { language: LANGUAGE_ID },
+                    tsProvider,
+                    TREESITTER_LEGEND,
+                ),
+            );
+            logInfo('Tree-sitter semantic tokens enabled');
+        } else {
+            logInfo('Tree-sitter not available — using TextMate grammar only');
+        }
     } else {
-        logInfo('Tree-sitter not available — using TextMate grammar only');
+        logInfo('Using TextMate syntax highlighting');
     }
 
+    context.subscriptions.push(
+        languages.registerDocumentSemanticTokensProvider(
+            { language: LANGUAGE_ID },
+            createParameterSemanticTokensProvider(),
+            VYPER_PARAMETER_LEGEND,
+        ),
+    );
+    logInfo('Parameter semantic tokens enabled');
+
     // Start LSP if enabled in settings
-    const settings = getExtensionSettings();
     if (settings.lspEnabled) {
         lspClient = await startLspClient(outputChannel);
         if (lspClient) {
@@ -137,8 +153,12 @@ async function compileContract(filePath: string): Promise<void> {
 
     // In Flatpak, route through flatpak-spawn to reach host tools
     const isSandboxed = (() => {
-        try { require('node:child_process').execSync('command -v flatpak-spawn', { stdio: 'ignore' }); return true; }
-        catch { return false; }
+        try {
+            require('node:child_process').execSync('command -v flatpak-spawn', { stdio: 'ignore' });
+            return true;
+        } catch {
+            return false;
+        }
     })();
 
     let execCommand = commandParts[0];
