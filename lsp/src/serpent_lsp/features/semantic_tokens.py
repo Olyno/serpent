@@ -7,7 +7,7 @@ Provides consistent coloring across definitions and usages:
 """
 
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from lsprotocol import types
 from pygls.workspace import TextDocument
@@ -80,18 +80,35 @@ def _make_modifier(*names: str) -> int:
     return result
 
 
-def _collect_parameters(
-    node: BaseNode, params: Dict[str, Tuple[int, int, int, int]]
-) -> None:
-    """Collect parameter names from function definitions."""
-    if isinstance(node, FunctionDef):
-        for arg in getattr(node, "args", {}).get("args", []):
-            if isinstance(arg, dict) and "arg" in arg:
-                param_name = arg["arg"]
-                if param_name not in params:
-                    line = arg.get("lineno", 0) - 1
-                    col = arg.get("col_offset", 0)
-                    params[param_name] = (line, col, line, col + len(param_name))
+SemanticToken = Tuple[int, int, int, str, int, int]
+
+
+def _function_args(function: FunctionDef) -> Iterable[Any]:
+    """Return function argument nodes from either raw dicts or parsed dataclasses."""
+    args = getattr(function, "args", None)
+    if isinstance(args, dict):
+        return args.get("args", [])
+    return getattr(args, "args", []) or []
+
+
+def _parameter_info(function: FunctionDef) -> Dict[str, Tuple[int, int, int]]:
+    """Collect parameter definitions for a single function."""
+    parameters: Dict[str, Tuple[int, int, int]] = {}
+
+    for arg in _function_args(function):
+        if isinstance(arg, dict):
+            name = arg.get("arg")
+            line = arg.get("lineno", 0) - 1
+            col = arg.get("col_offset", 0)
+        else:
+            name = getattr(arg, "arg", None)
+            line = getattr(arg, "lineno", 0) - 1
+            col = getattr(arg, "col_offset", 0)
+
+        if name and line >= 0 and name not in parameters:
+            parameters[name] = (line, col, len(name))
+
+    return parameters
 
 
 def _walk_ast(node: BaseNode):
@@ -152,16 +169,26 @@ def compute_semantic_tokens(
     if module is None or module.ast is None:
         return None
 
-    encoder = SemanticTokenEncoder()
     ast = module.ast
+    tokens: Dict[Tuple[int, int, int], SemanticToken] = {}
 
-    # Step 1: Collect parameter definitions
-    parameters: Dict[str, Tuple[int, int, int, int]] = {}
-    _collect_parameters(ast, parameters)
+    def add_token(
+        line: int,
+        col_start: int,
+        length: int,
+        token_type: str,
+        modifiers: int = 0,
+        priority: int = 1,
+    ) -> None:
+        if line < 0 or col_start < 0 or length <= 0:
+            return
 
-    # Step 2: Walk AST and emit tokens
-    param_usages: Dict[str, List[Tuple[int, int, int, int]]] = {}
+        key = (line, col_start, length)
+        previous = tokens.get(key)
+        if previous is None or priority >= previous[5]:
+            tokens[key] = (line, col_start, length, token_type, modifiers, priority)
 
+    # Walk AST and emit tokens.
     for node in _walk_ast(ast):
         # Function definitions → function type
         if isinstance(node, FunctionDef):
@@ -169,7 +196,27 @@ def compute_semantic_tokens(
             if isinstance(name_node, str):
                 line = getattr(node, "lineno", 0) - 1
                 col = getattr(node, "col_offset", 0) + 4  # after "def "
-                encoder.add(line, col, len(name_node), "function", _make_modifier("declaration"))
+                add_token(line, col, len(name_node), "function", _make_modifier("declaration"))
+
+            parameters = _parameter_info(node)
+            definition_positions = {
+                (line, col, length) for line, col, length in parameters.values()
+            }
+
+            for line, col, length in parameters.values():
+                add_token(line, col, length, "parameter", _make_modifier("declaration"), priority=2)
+
+            for child in _walk_ast(node):
+                if not isinstance(child, Name) or child.id not in parameters:
+                    continue
+
+                line = child.lineno - 1 if child.lineno else 0
+                col = child.col_offset if child.col_offset else 0
+                length = len(child.id)
+                if (line, col, length) in definition_positions:
+                    continue
+
+                add_token(line, col, length, "parameter", priority=2)
 
         # Variable/parameter definitions → parameter type at declaration
         if isinstance(node, (VariableDecl, AnnAssign)):
@@ -194,16 +241,13 @@ def compute_semantic_tokens(
                     parent = getattr(parent, "parent", None)
 
                 if in_function:
-                    encoder.add(t_line, t_col, len(ident), "variable", _make_modifier("declaration"))
+                    add_token(t_line, t_col, len(ident), "variable", _make_modifier("declaration"))
                 else:
-                    encoder.add(t_line, t_col, len(ident), "variable", _make_modifier("declaration", "static"))
+                    add_token(t_line, t_col, len(ident), "variable", _make_modifier("declaration", "static"))
 
-        # Name references — intentionally skipped.
-        # We let TextMate handle variable/parameter coloring to avoid
-        # semantic tokens overriding TextMate colors when the theme does
-        # not define colors for the standard 'parameter'/'variable' tokens.
-        # The LSP only highlights definitions (functions, types, state vars)
-        # where semantic tokens add real value.
+    encoder = SemanticTokenEncoder()
+    for line, col, length, token_type, modifiers, _priority in sorted(tokens.values()):
+        encoder.add(line, col, length, token_type, modifiers)
 
     data = encoder.build()
     if not data:

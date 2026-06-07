@@ -7,6 +7,7 @@ Handles document events, navigation, completion, hover, and diagnostics.
 
 import asyncio
 import logging
+import os
 import re
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -27,8 +28,9 @@ from serpent_lsp.features.diagnostics import (
 from serpent_lsp.features.formatting import format_document
 from serpent_lsp.features.hover import get_hover_info
 from serpent_lsp.features.references import get_all_references
+from serpent_lsp.features.semantic_tokens import TOKEN_MODIFIERS, TOKEN_TYPES
 from serpent_lsp.features.symbols import get_document_symbols
-from serpent_lsp.logger import setup_logging
+from serpent_lsp.logger import enable_client_logging, setup_logging
 from serpent_lsp.parser import Module, parse_module
 
 logger = logging.getLogger("serpent_lsp")
@@ -330,6 +332,13 @@ server = SerpentLanguageServer("serpent-lsp", "0.1.0")
 # =============================================================================
 
 
+@server.feature(types.INITIALIZED)
+def initialized(ls: SerpentLanguageServer, _params: types.InitializedParams) -> None:
+    """Enable client-bound logging after the LSP transport is initialized."""
+    enable_client_logging(ls.logger)
+    ls.logger.info("LSP client initialized")
+
+
 @server.feature(types.TEXT_DOCUMENT_DID_OPEN)
 def did_open(
     ls: SerpentLanguageServer, params: types.DidOpenTextDocumentParams
@@ -532,11 +541,23 @@ def formatting(
 # =============================================================================
 
 
-@server.feature(types.TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL)
+@server.feature(
+    types.TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL,
+    types.SemanticTokensOptions(
+        legend=types.SemanticTokensLegend(
+            token_types=TOKEN_TYPES,
+            token_modifiers=TOKEN_MODIFIERS,
+        ),
+        full=True,
+    ),
+)
 def semantic_tokens_full(
     ls: SerpentLanguageServer, params: types.SemanticTokensParams
 ) -> Optional[types.SemanticTokens]:
     """Provide semantic tokens for consistent coloring (parameters, variables)."""
+    if os.environ.get("SERPENT_LSP_SEMANTIC_TOKENS") != "1":
+        return None
+
     from serpent_lsp.features.semantic_tokens import compute_semantic_tokens
 
     doc = ls.workspace.get_text_document(params.text_document.uri)

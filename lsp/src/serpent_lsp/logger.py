@@ -25,9 +25,17 @@ class LspLogHandler(logging.Handler):
     def __init__(self, ls: LanguageServer) -> None:
         super().__init__()
         self.ls = ls
+        self._enabled = False
+
+    def set_enabled(self, enabled: bool) -> None:
+        """Enable client-bound logging once the LSP transport is ready."""
+        self._enabled = enabled
 
     def emit(self, record: logging.LogRecord) -> None:
         """Emits a log to the LSP client."""
+        if not self._enabled:
+            return
+
         try:
             message = self.format(record)
             if self.ls and hasattr(self.ls, "window_log_message"):
@@ -78,6 +86,13 @@ def setup_logging(
         logger.addHandler(lsp_handler)
 
     return logger
+
+
+def enable_client_logging(logger: logging.Logger) -> None:
+    """Allow LSP log handlers to send messages to the initialized client."""
+    for handler in logger.handlers:
+        if isinstance(handler, LspLogHandler):
+            handler.set_enabled(True)
 
 
 def configure_logging(level: str = "INFO") -> None:

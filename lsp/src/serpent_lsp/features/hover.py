@@ -42,6 +42,12 @@ def _get_node_documentation(node: BaseNode) -> str:
         return f"**Flag** `{node.name}`"
     elif isinstance(node, nodes.InterfaceDef):
         return f"**Interface** `{node.name}`"
+    elif isinstance(node, nodes.arg):
+        arg_name = getattr(node, 'arg', 'unknown')
+        type_str = ""
+        if node.annotation and isinstance(node.annotation, nodes.Name):
+            type_str = f": {node.annotation.id}"
+        return f"**Parameter** `{arg_name}{type_str}`"
     else:
         return f"`{getattr(node, 'name', 'symbol')}`"
 
