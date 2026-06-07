@@ -179,7 +179,6 @@ async function compileContract(filePath: string): Promise<void> {
                 window.showErrorMessage(`Compilation failed: ${errorMessage.split('\n')[0]}`);
             } else {
                 logInfo(`Compilation succeeded: ${stdout.trim() || 'OK'}`);
-                window.showInformationMessage('Vyper compilation successful');
             }
             resolveResult();
         });
