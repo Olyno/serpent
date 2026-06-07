@@ -4,7 +4,7 @@
     "description": "Vyper language support for Visual Studio Code — LSP, snippets, syntax highlighting, compilation",
     "version": "0.1.0",
     "license": "MIT",
-    "publisher": "serpent",
+    "publisher": "Olyno",
     "icon": "images/icon.png",
     "repository": {
         "type": "git",
